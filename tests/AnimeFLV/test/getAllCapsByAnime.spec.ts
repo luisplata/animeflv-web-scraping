@@ -114,7 +114,8 @@ test('AnimeFLV', async ({page}) => {
                 animeTargets.map(async (target) => {
                     await Promise.all([
                             target.caps.map(async (cap) => {
-                                let specificCap = new SpecificCap(await homePage.getPage.context().newPage(), user.getPage() + cap.getUrl);
+                                console.log("🔗 Cap::", cap.getTitle, cap.getUrl);
+                                let specificCap = new SpecificCap(await page.context().newPage(), user.getPage() + cap.getUrl);
                                 await specificCap.init();
                                 await getProvider(user)(cap, specificCap);
                             })

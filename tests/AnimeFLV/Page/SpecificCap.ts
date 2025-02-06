@@ -1,5 +1,5 @@
-import { BasePage } from "../../../Page/BasePage";
-import { Page, Locator } from '@playwright/test';
+import {BasePage} from "../../../Page/BasePage";
+import {Locator} from '@playwright/test';
 
 export class SpecificCap extends BasePage {
     private readonly listOfOptions = "//ul[@role='tablist']/li";
@@ -19,7 +19,7 @@ export class SpecificCap extends BasePage {
         let popupOpened = false;
         do {
             const [popup] = await Promise.all([
-                this.page.waitForEvent('popup', { timeout: 3000 }).catch(() => null),
+                this.page.waitForEvent('popup', {timeout: 3000}).catch(() => null),
                 option.click(),
             ]);
 
