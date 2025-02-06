@@ -1,10 +1,11 @@
-import { Locator } from "@playwright/test";
-import { BasePage } from "../../../Page/BasePage";
+import {Locator} from "@playwright/test";
+import {BasePage} from "../../../Page/BasePage";
 
 export class HomePage extends BasePage {
     private readonly listOfAnimeByDay = "//ul[contains(@class, 'ListEpisodios')]/li";
     private readonly linkToAnime = "a";
     private readonly titleOfAnime = "strong";
+    private readonly image = '//img';
 
     public async getListOfAnimeByDay(): Promise<Locator[]> {
         return await this.page.locator(this.listOfAnimeByDay).all();
@@ -16,6 +17,10 @@ export class HomePage extends BasePage {
 
     public async getTitleOfAnime(anime: Locator): Promise<string> {
         return await anime.locator(this.titleOfAnime).innerText();
+    }
+
+    public async getImageOfAnime(anime: Locator): Promise<string> {
+        return await anime.locator(this.image).first().getAttribute('src');
     }
 
 }

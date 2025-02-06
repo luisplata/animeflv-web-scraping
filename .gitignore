@@ -135,3 +135,5 @@ dist
 # Playwright
 /playwright-report
 /playwright/.cache
+
+/.idea
