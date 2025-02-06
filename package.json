@@ -3,11 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "install": "npm install",
     "test": "npx playwright test",
     "test:debug": "npx playwright test --debug",
-    "test:specific": "npx playwright test tests/AnimeFLV/test/listAnimeOfDay.spec.ts",
-    "playwright:update": "npx playwright install",
     "clean": "npm cache clean --force"
   },
   "keywords": [],
