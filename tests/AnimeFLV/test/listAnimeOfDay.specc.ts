@@ -10,18 +10,8 @@ import {sendToDiscord} from "../Task/sendToDiscord";
 
 test('scrapping animeflv', async ({page}) => {
 
-    const user = new User("Otaku", "MEGA", "https://animeflv.net");
-    const nameOfAnimeToSendDiscord = [
-        ["shiawase", "kekkon"],
-        ["kaisha", "suki", "imasu"],
-        ["behemoth", "machigawarete", "kurashitemasu"],
-        ["kunoichi", "dousei", "hajimemashita"],
-        ["tensei", "ojisan"],
-        ["sakamoto", "days"],
-        ["otoko", "isekai", "tsuuhan"],
-    ];
-    const webHook = "https://discordapp.com/api/webhooks/1337063698497273978/_t3TPDrX8OHosD6Uap065EfCDXLq2QIdHAy5vqra0_BO2PxaI-uG8i-SAEEzf33uL55H";
-    let data = new Data("AnimeFLV", nameOfAnimeToSendDiscord, webHook);
+    let data = new Data("AnimeFLV");
+    const user = new User("Otaku", data.getProvider, data.getPage);
 
     await user.attemptsTo(
         async () => {
@@ -36,6 +26,6 @@ test('scrapping animeflv', async ({page}) => {
                     await getProvider(user)(cap, specificCap);
                 })
             );
-            await sendToDiscord()(user, data);
+            await sendToDiscord()(user, data, data.getCapitulos());
         });
 });

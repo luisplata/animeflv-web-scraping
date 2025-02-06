@@ -1,7 +1,23 @@
 export class Data {
     private readonly caps_today: Capitulo[] = [];
+    private readonly animes = nameOfAnimeToSendDiscord;
+    private readonly provider = PROVIDER;
+    private readonly webhookUrl = webHook;
+    private readonly page = page;
 
-    constructor(public name: string, public nameOfAnimeToSendDiscord: string[][], public webhookUrl: string) {
+    constructor(public name: string) {
+    }
+
+    public get getProvider() {
+        return this.provider;
+    }
+
+    public get getWebhookUrl() {
+        return this.webhookUrl;
+    }
+
+    public get getPage() {
+        return this.page;
     }
 
     public async addCap(cap: Capitulo) {
@@ -22,7 +38,7 @@ export class Data {
     }
 
     public validateNameOfAnimeToSendDiscord(name: string): boolean {
-        for (const anime of this.nameOfAnimeToSendDiscord) {
+        for (const anime of this.animes) {
             //need to check if all words are in the name
             let found = true;
             for (const word of anime) {
@@ -73,3 +89,16 @@ export class Capitulo {
         return this.image;
     }
 }
+
+export const nameOfAnimeToSendDiscord = [
+    ["shiawase", "kekkon"],
+    ["kaisha", "suki", "imasu"],
+    ["behemoth", "machigawarete", "kurashitemasu"],
+    ["kunoichi", "dousei", "hajimemashita"],
+    ["tensei", "ojisan"],
+    ["sakamoto", "days"],
+    ["otoko", "isekai", "tsuuhan"],
+];
+export const webHook = "https://discordapp.com/api/webhooks/1337063698497273978/_t3TPDrX8OHosD6Uap065EfCDXLq2QIdHAy5vqra0_BO2PxaI-uG8i-SAEEzf33uL55H";
+export const page = "https://animeflv.net";
+export const PROVIDER = "Mega";

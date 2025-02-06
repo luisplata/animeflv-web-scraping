@@ -1,8 +1,9 @@
-import { Page } from '@playwright/test';
+import {Page} from '@playwright/test';
 
 export class BasePage {
     protected page: Page;
-    private url: string;
+    protected url: string;
+
     constructor(page: Page, url: string) {
         this.url = url;
         this.page = page;
@@ -18,9 +19,13 @@ export class BasePage {
                     route.continue();
                 }
             });
-            await this.page.goto(this.url, { timeout: 90000, waitUntil: 'domcontentloaded' });
+            await this.page.goto(this.url, {timeout: 90000, waitUntil: 'domcontentloaded'});
         } catch (error) {
             console.error(`Failed to navigate to ${this.url}:`, error);
         }
+    }
+
+    public get getPage(): Page {
+        return this.page;
     }
 }
