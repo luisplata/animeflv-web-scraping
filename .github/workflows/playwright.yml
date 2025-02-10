@@ -52,10 +52,11 @@ jobs:
     - name: Read JSON output
       id: read_output
       run: |
-        cat results.json
         if [ "${{ github.event.inputs.searchType }}" == "OfDay" ]; then
+          cat results/results_of_day.json
           echo "json_output=$(jq -c . results/results_of_day.json)" >> $GITHUB_ENV
         else
+          cat results/results_all_caps.json
           echo "json_output=$(jq -c . results/results_all_caps.json)" >> $GITHUB_ENV
         fi
 
