@@ -9,6 +9,7 @@ import { GetAllCapsByAnime } from "../Task/getAllCapsByAnime";
 import { SpecificCap } from "../Page/SpecificCap";
 import { getProvider } from "../Task/getProvider";
 import { sendToDiscord } from "../Task/sendToDiscord";
+import { generateFileWithResults } from "../Task/GenerateFileWithResults";
 
 const animeName: string = process.env.ANIME_NAME || '[]';
 const discordWebhook = process.env.DISCORD_WEBHOOK || '';
@@ -108,7 +109,6 @@ test('Get all caps by anime name', async ({ page }) => {
                                     await getProvider(user)(cap, specificCap);
                                 })
                             );
-                            await sendToDiscord()(user, data.getWebhookUrl, target.caps);
                         })
                     );
                     homePage.getPage.close();
@@ -116,4 +116,13 @@ test('Get all caps by anime name', async ({ page }) => {
             );
             //console.log("Anime Targets with caps::", animeTargets);
         });
+
+
+    if (data.getWebhookUrl !== "") {
+        animeTargets.map(async (target) => {
+            await sendToDiscord()(user, data.getWebhookUrl, target.caps);
+        });
+    } else {
+        generateFileWithResults(animeTargets, "all_caps");
+    }
 });

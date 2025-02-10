@@ -6,6 +6,7 @@ import { getAnimeByDayTask } from '../Task/getAnimeTask';
 import { SpecificCap } from '../Page/SpecificCap';
 import { getProvider } from '../Task/getProvider';
 import { sendToDiscord } from "../Task/sendToDiscord";
+import { generateFileWithResults } from '../Task/GenerateFileWithResults';
 
 const animeName: string = process.env.ANIME_NAME || '[]';
 const discordWebhook = process.env.DISCORD_WEBHOOK || '';
@@ -26,17 +27,26 @@ test('scrapping animeflv', async ({ page }) => {
         async () => {
             const homePage = new HomePage(page, user.getPage());
             await homePage.init();
-            await getAnimeByDayTask()(user, homePage, data);
+            await getAnimeByDayTask()(user, homePage, data, animeTargets);
             await Promise.all(
-                data.getCapitulos().map(async (cap) => {
-                    const specificCap = new SpecificCap(await page.context().newPage(), cap.getUrl);
+                animeTargets.map(async (target) => {
+                    const specificCap = new SpecificCap(await page.context().newPage(), target.link);
                     await specificCap.init();
                     await specificCap.getPage.waitForTimeout(2000);
-                    await getProvider(user)(cap, specificCap);
+                    await Promise.all(
+                        target.caps.map(async (cap) => {
+                            await getProvider(user)(cap, specificCap);
+                        })
+                    );
                 })
             );
+
             if (data.getWebhookUrl !== "") {
-                await sendToDiscord()(user, data.getWebhookUrl, data.getCapitulos());
+                animeTargets.map(async (target) => {
+                    await sendToDiscord()(user, data.getWebhookUrl, target.caps);
+                });
+            } else {
+                generateFileWithResults(animeTargets, "of_day");
             }
         });
 });

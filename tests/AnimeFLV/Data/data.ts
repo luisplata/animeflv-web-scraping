@@ -42,7 +42,6 @@ export class Data {
 
     public validateNameOfAnimeToSendDiscord(name: string): boolean {
         return this.animes.some(anime => {
-            console.log("Checking::", anime, name);
             return anime.every(word => name.toLowerCase().includes(word.toLowerCase()));
         });
     }
