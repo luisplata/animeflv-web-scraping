@@ -32,9 +32,9 @@ jobs:
     - name: Run Playwright tests
       run: |
         if [ "${{ github.event.inputs.searchType }}" == "OfDay" ]; then
-          ANIME_NAME=${{ github.event.inputs.animeName }} DISCORD_WEBHOOK=${{ github.event.inputs.discordWebhook }} npx playwright test tests/AnimeFLV/test/getAnimeOfDay.spec.ts
+          ANIME_NAME="${{ github.event.inputs.animeName }}" DISCORD_WEBHOOK="${{ github.event.inputs.discordWebhook }}" npx playwright test tests/AnimeFLV/test/getAnimeOfDay.spec.ts
         else
-          ANIME_NAME=${{ github.event.inputs.animeName }} DISCORD_WEBHOOK=${{ github.event.inputs.discordWebhook }} npx playwright test tests/AnimeFLV/test/getAllCapsByAnime.spec.ts
+          ANIME_NAME="${{ github.event.inputs.animeName }}" DISCORD_WEBHOOK="${{ github.event.inputs.discordWebhook }}" npx playwright test tests/AnimeFLV/test/getAllCapsByAnime.spec.ts
         fi
       env:
         CI: true
