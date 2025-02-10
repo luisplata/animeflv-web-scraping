@@ -1,11 +1,21 @@
 name: Playwright Tests
 on:
-  push:
-    branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
-  schedule:
-    - cron: '0 12 * * *'
+  workflow_dispatch:
+    inputs:
+      animeName:
+        description: 'Name of the anime'
+        required: true
+      discordWebhook:
+        description: 'Discord webhook to send the report'
+        required: false
+      searchType:
+        type: choice
+        description: 'Type of search (OfDay or AllCaps)'
+        required: true
+        default: 'AllCaps'
+        options:
+          - OfDay
+          - AllCaps
 jobs:
   test:
     timeout-minutes: 60
@@ -20,7 +30,14 @@ jobs:
     - name: Install Playwright Browsers
       run: npx playwright install --with-deps
     - name: Run Playwright tests
-      run: npx playwright test
+      run: |
+        if [ "${{ github.event.inputs.searchType }}" == "OfDay" ]; then
+          ANIME_NAME=${{ github.event.inputs.animeName }} DISCORD_WEBHOOK=${{ github.event.inputs.discordWebhook }} npx playwright test tests/AnimeFLV/test/getAnimeOfDay.spec.ts
+        else
+          ANIME_NAME=${{ github.event.inputs.animeName }} DISCORD_WEBHOOK=${{ github.event.inputs.discordWebhook }} npx playwright test tests/AnimeFLV/test/getAllCapsByAnime.spec.ts
+        fi
+      env:
+        CI: true
     - uses: actions/upload-artifact@v4
       if: ${{ !cancelled() }}
       with:

@@ -37,8 +37,4 @@ export class DirectoryOfAnimes extends BasePage {
     public get getNext(): string {
         return this.next;
     }
-
-    public async close() {
-        await this.page.close();
-    }
 }

@@ -1,11 +1,14 @@
 export class Data {
     private readonly caps_today: Capitulo[] = [];
-    private readonly animes = nameOfAnimeToSendDiscord;
-    private readonly provider = PROVIDER;
-    private readonly webhookUrl = webHook;
-    private readonly page = page;
+    private readonly animes: string[][] = [];
+    private readonly provider: string;
+    private readonly webhookUrl: string;
+    private readonly page: string;
 
-    constructor(public name: string) {
+    constructor(public name: string, page: string, provider: string, webhookUrl: string) {
+        this.provider = provider;
+        this.webhookUrl = webhookUrl;
+        this.page = page;
     }
 
     public get getProvider() {
@@ -38,21 +41,14 @@ export class Data {
     }
 
     public validateNameOfAnimeToSendDiscord(name: string): boolean {
-        for (const anime of this.animes) {
-            //need to check if all words are in the name
-            let found = true;
-            for (const word of anime) {
-                if (!name.toLowerCase().includes(word.toLowerCase())) {
-                    found = false;
-                    break;
-                }
-            }
-            if (found) {
-                return true;
-            }
+        return this.animes.some(anime => {
+            console.log("Checking::", anime, name);
+            return anime.every(word => name.toLowerCase().includes(word.toLowerCase()));
+        });
+    }
 
-        }
-        return false;
+    public setAnimes(name: string[]): void {
+        this.animes.push(name);
     }
 }
 
@@ -90,15 +86,20 @@ export class Capitulo {
     }
 }
 
-export const nameOfAnimeToSendDiscord = [
-    ["shiawase", "kekkon"],
-    ["kaisha", "suki", "imasu"],
-    ["behemoth", "machigawarete", "kurashitemasu"],
-    ["kunoichi", "dousei", "hajimemashita"],
-    ["tensei", "ojisan"],
-    ["sakamoto", "days"],
-    ["otoko", "isekai", "tsuuhan"],
-];
-export const webHook = "https://discordapp.com/api/webhooks/1337063698497273978/_t3TPDrX8OHosD6Uap065EfCDXLq2QIdHAy5vqra0_BO2PxaI-uG8i-SAEEzf33uL55H";
-export const page = "https://animeflv.net";
-export const PROVIDER = "Mega";
+export class AnimeTarget {
+    name: string[];
+    link: string;
+    found: boolean;
+    image: string;
+    fullname: string;
+    caps: Capitulo[];
+
+    constructor(names: string[]) {
+        this.name = names;
+        this.link = "";
+        this.found = false;
+        this.image = "";
+        this.fullname = "";
+        this.caps = [];
+    }
+}

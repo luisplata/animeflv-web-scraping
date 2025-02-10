@@ -11,7 +11,7 @@ export const getAnimeByDayTask = () => async (actor: Actor, page: HomePage, data
                 const link = await page.getLinkToAnime(animeOfDay) ?? "";
                 const image = await page.getImageOfAnime(animeOfDay);
                 if (data.validateNameOfAnimeToSendDiscord(title)) {
-                    let cap = new Capitulo(link, title, image);
+                    let cap = new Capitulo(data.getPage + link, title, data.getPage + image);
                     await data.addCap(cap);
                 }
             }
