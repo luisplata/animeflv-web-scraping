@@ -9,7 +9,7 @@ on:
         description: 'Discord webhook to send the report'
         required: false
       Webhook:
-        description: 'Discord webhook to send the report'
+        description: 'webhook to send the result'
         required: false
       uuid:
         description: 'User UUID'
