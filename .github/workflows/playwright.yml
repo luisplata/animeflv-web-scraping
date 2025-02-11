@@ -50,6 +50,7 @@ jobs:
         CI: true
 
     - name: Read JSON output
+      if: ${{ github.event.inputs.Webhook != '' }}
       id: read_output
       run: |
         if [ "${{ github.event.inputs.searchType }}" == "OfDay" ]; then
@@ -61,19 +62,18 @@ jobs:
         fi
 
     - name: Send Webhook to Backend
+      if: ${{ github.event.inputs.Webhook != '' }}
       run: |
-        if [ -n "${{ github.event.inputs.Webhook }}" ]; then
-          curl -X POST "${{ github.event.inputs.Webhook }}" \
-                -H "Content-Type: application/json" \
-                -d '{
-                      "uuid": "${{ github.event.inputs.uuid }}",
-                      "animeName": "${{ github.event.inputs.animeName }}",
-                      "status": "completed",
-                      "results": ${{ env.json_output }}
-                    }'
-        fi
-                
-    - uses: actions/upload-artifact@v4
+        curl -X POST "${{ github.event.inputs.Webhook }}" \
+              -H "Content-Type: application/json" \
+              -d '{
+                    "uuid": "${{ github.event.inputs.uuid }}",
+                    "animeName": "${{ github.event.inputs.animeName }}",
+                    "status": "completed",
+                    "results": ${{ env.json_output }}
+                  }'
+
+      - uses: actions/upload-artifact@v4
       if: ${{ !cancelled() }}
       with:
         name: playwright-report
