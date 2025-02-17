@@ -1,18 +1,18 @@
-import { test } from '@playwright/test';
-import { User } from '../Actor/User';
-import { HomePage } from '../Page/HomePage';
-import { Data, AnimeTarget } from '../Data/data';
-import { getAnimeByDayTask } from '../Task/getAnimeTask';
-import { SpecificCap } from '../Page/SpecificCap';
-import { getProvider } from '../Task/getProvider';
-import { sendToDiscord } from "../Task/sendToDiscord";
-import { generateFileWithResults } from '../Task/GenerateFileWithResults';
+import {test} from '@playwright/test';
+import {User} from '../Actor/User';
+import {HomePage} from '../Page/HomePage';
+import {Data, AnimeTarget} from '../Data/data';
+import {getAnimeByDayTask} from '../Task/getAnimeTask';
+import {SpecificCap} from '../Page/SpecificCap';
+import {getProvider} from '../Task/getProvider';
+import {sendToDiscord} from "../Task/sendToDiscord";
+import {generateFileWithResults} from '../Task/GenerateFileWithResults';
 
 const animeName: string = process.env.ANIME_NAME || '[]';
 const discordWebhook = process.env.DISCORD_WEBHOOK || '';
 const provider = process.env.PROVIDER || 'mega';
 
-test('scrapping animeflv', async ({ page }) => {
+test('scrapping animeflv', async ({page}) => {
     let data = new Data("AnimeFLV", "https://animeflv.net", provider, discordWebhook);
     const user = new User("Otaku", data.getProvider, data.getPage);
 
@@ -42,9 +42,11 @@ test('scrapping animeflv', async ({ page }) => {
             );
 
             if (data.getWebhookUrl !== "") {
-                animeTargets.map(async (target) => {
-                    await sendToDiscord()(user, data.getWebhookUrl, target.caps);
-                });
+                await Promise.all(
+                    animeTargets.map(async (target) => {
+                        await sendToDiscord()(user, data.getWebhookUrl, target.caps);
+                    })
+                );
             } else {
                 generateFileWithResults(animeTargets, "of_day");
             }

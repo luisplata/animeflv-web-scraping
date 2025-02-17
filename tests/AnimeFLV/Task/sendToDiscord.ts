@@ -1,4 +1,4 @@
-import { Capitulo, Data } from "../Data/data";
+import { Capitulo } from "../Data/data";
 import { Actor } from "../../../Actor/Actor";
 import axios from 'axios';
 
@@ -9,7 +9,6 @@ export const sendToDiscord = () => async (actor: Actor, webhook: string, caps: C
             for (const cap of caps) {
                 for (const viewUrl of cap.viewUrls) {
                     try {
-
                         let response = await axios.post(webhook, {
                             content: `Nuevo capitulo de\n**${cap.getTitle}**\nmiralo sin publicidad en\n${viewUrl}\n![Imagen](${cap.getImage})`
                         });
