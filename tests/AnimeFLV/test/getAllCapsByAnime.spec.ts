@@ -1,15 +1,15 @@
-import { Locator, test } from "@playwright/test";
-import { AnimeTarget, Capitulo, Data } from "../Data/data";
-import { User } from "../Actor/User";
-import { DirectoryOfAnimes } from "../Page/DirectoryOfAnimes";
-import { DirectoryOfAllAnimes } from "../Task/directoryAllAnimes";
-import { HomePage } from "../Page/HomePage";
-import { SpecificAnime } from "../Page/SpecificAnime";
-import { GetAllCapsByAnime } from "../Task/getAllCapsByAnime";
-import { SpecificCap } from "../Page/SpecificCap";
-import { getProvider } from "../Task/getProvider";
-import { sendToDiscord } from "../Task/sendToDiscord";
-import { generateFileWithResults } from "../Task/GenerateFileWithResults";
+import {Locator, test} from "@playwright/test";
+import {AnimeTarget, Capitulo, Data} from "../Data/data";
+import {User} from "../Actor/User";
+import {DirectoryOfAnimes} from "../Page/DirectoryOfAnimes";
+import {DirectoryOfAllAnimes} from "../Task/directoryAllAnimes";
+import {HomePage} from "../Page/HomePage";
+import {SpecificAnime} from "../Page/SpecificAnime";
+import {GetAllCapsByAnime} from "../Task/getAllCapsByAnime";
+import {SpecificCap} from "../Page/SpecificCap";
+import {getProvider} from "../Task/getProvider";
+import {sendToDiscord} from "../Task/sendToDiscord";
+import {generateFileWithResults} from "../Task/GenerateFileWithResults";
 
 const animeName: string = process.env.ANIME_NAME || '[]';
 const discordWebhook = process.env.DISCORD_WEBHOOK || '';
@@ -18,7 +18,7 @@ const provider = process.env.PROVIDER || 'mega';
 
 test.setTimeout(10 * 60 * 1000);
 
-test('Get all caps by anime name', async ({ page }) => {
+test('Get all caps by anime name', async ({page}) => {
     let data = new Data("AnimeFLV", "https://animeflv.net", provider, discordWebhook);
     const user = new User("Otaku", data.getProvider, data.getPage);
 
@@ -111,7 +111,7 @@ test('Get all caps by anime name', async ({ page }) => {
                             );
                         })
                     );
-                    homePage.getPage.close();
+                    await homePage.getPage.close();
                 })
             );
             //console.log("Anime Targets with caps::", animeTargets);
@@ -122,7 +122,6 @@ test('Get all caps by anime name', async ({ page }) => {
         animeTargets.map(async (target) => {
             await sendToDiscord()(user, data.getWebhookUrl, target.caps);
         });
-    } else {
-        generateFileWithResults(animeTargets, "all_caps");
     }
+    generateFileWithResults(animeTargets, "all_caps");
 });

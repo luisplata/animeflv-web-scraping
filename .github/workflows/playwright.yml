@@ -54,7 +54,7 @@ jobs:
 
       - name: check files to upload
         run: |
-          ls results/
+          ls /
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
