@@ -126,9 +126,11 @@ jobs:
         run: |
           mkdir -p mega_downloads
           jq -r '.[].caps[].view_url[]' results/results_all_caps.json | while read -r link; do
-            echo "⬇️ Descargando $link..."
-            mega-get "$link" mega_downloads/ || echo "❌ Error descargando $link, continuando..."
+            fixed_link=$(echo "$link" | sed 's|embed/|file/|')
+            echo "⬇️ Descargando $fixed_link..."
+            mega-get "$fixed_link" mega_downloads/ || echo "❌ Error descargando $fixed_link, continuando..."
           done
+
 
 
 
