@@ -125,14 +125,11 @@ jobs:
       - name: Download files from MEGA
         run: |
           mkdir -p mega_downloads
-          jq -r '.[].caps[].view_url[]' results/results_all_caps.json | while read -r link; do
-            fixed_link=$(echo "$link" | sed 's|embed/|file/|')
-            echo "⬇️ Descargando $fixed_link..."
-            mega-get "$fixed_link" mega_downloads/ || echo "❌ Error descargando $fixed_link, continuando..."
+          jq -r '.[] | .caps[].view_url[0]' results/results_all_caps.json | while read -r link; do
+            formatted_link=$(echo "$link" | sed -E 's#https://mega.nz/embed/!(.*)!(.*)#https://mega.nz/file/\1#\2#')
+            echo "⬇️ Descargando $formatted_link..."
+            mega-get "$formatted_link" mega_downloads/ || echo "❌ Error descargando $formatted_link, continuando con el siguiente..."
           done
-
-
-
 
 # Subir archivos nuevamente a MEGA
       - name: Upload files to My MEGA
