@@ -136,14 +136,46 @@ jobs:
         run: |
           mkdir -p mega_uploaded
           for file in mega_downloads/*; do
-            echo "📤 Subiendo $file..."
-            mega-put -c "$file" /Pery_SonPruebasNoLaBorres/anime/
-            uploaded_link=$(mega-export -a "/Pery_SonPruebasNoLaBorres/$(basename "$file")" | grep 'https://')
+            # Extraer nombre del anime desde el JSON
+            anime_name=$(jq -r '.[] | .name[0]' results/results_all_caps.json | tr -d '[:space:]')
+            
+            # Crear carpeta con el nombre del anime
+            remote_folder="/Pery_SonPruebasNoLaBorres/anime/$anime_name"
+            mega-mkdir -p "$remote_folder"
+            
+            # Agregar timestamp al nombre del archivo
+            timestamp=$(date +"%Y-%m-%d_%H-%M-%S")
+            new_filename="${timestamp}_$(basename "$file")"
+            local_temp_file="mega_downloads/$new_filename"
+            
+            # Renombrar localmente
+            mv "$file" "$local_temp_file"
+            
+            echo "📤 Subiendo $new_filename a MEGA en $remote_folder..."
+            mega-put -c "$local_temp_file" "$remote_folder"
+            
+            # Esperar para sincronización
+            sleep 2
+            
+            # Obtener el link del archivo subido
+            remote_path="$remote_folder/$new_filename"
+            echo "🔗 Obteniendo enlace de descarga para $remote_path..."
+            
+            uploaded_link=$(mega-export -a "$remote_path" | grep 'https://')
+            
+            if [[ -z "$uploaded_link" ]]; then
+            echo "❌ Error obteniendo el enlace de $remote_path"
+            continue
+            fi
+            
             echo "✅ Archivo subido: $uploaded_link"
-            echo "{\"original\": \"$file\", \"uploaded\": \"$uploaded_link\"}" >> mega_uploaded/result.json
+            
+            # Guardar resultado en JSON
+            echo "{\"original\": \"$file\", \"renamed\": \"$new_filename\", \"uploaded\": \"$uploaded_link\"}" >> mega_uploaded/result.json
           done
+          echo "🚀 Proceso completado."
 
-      # Fusionar JSON con enlaces nuevos
+# Fusionar JSON con enlaces nuevos
       - name: Merge upload links with original JSON
         run: |
           jq --slurpfile new_data mega_uploaded/result.json '.links |= . + $new_data' results/results_all_caps.json > results/results_updated.json
