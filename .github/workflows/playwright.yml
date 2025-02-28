@@ -116,13 +116,21 @@ jobs:
           sudo apt install -y megacmd
           mega-login "${{ secrets.MEGA_EMAIL }}" "${{ secrets.MEGA_PASSWORD }}"
 
-      - name: Download files from MEGA
+      - name: Download files from MEGA with correct names
         run: |
           mkdir -p mega_downloads
-          jq -r '.[] | .caps[].view_url[0]' results/results_all_caps.json | while read -r link; do
+          jq -r '.[] | .caps[] | "\(.title) \(.view_url[0])"' results/results_all_caps.json | while read -r title link; do
             formatted_link=$(echo "$link" | sed -E 's|https://mega.nz/embed/!([^!]*)!([^ ]*)|https://mega.nz/file/\1#\2|')
-            echo "⬇️ Descargando $formatted_link..."
-            mega-get "$formatted_link" mega_downloads/ || echo "❌ Error descargando $formatted_link, continuando..."
+            anime_name=$(jq -r '.[] | .name[0]' results/results_all_caps.json | tr -d '[:space:]')
+            cap_num=$(echo "$title" | grep -oE '[0-9]+$')
+            date_suffix=$(date +"%Y%m%d")
+            new_filename="${anime_name}_cap_${cap_num}_${date_suffix}.mp4"
+            echo "⬇️ Descargando $formatted_link como $new_filename..."
+            if mega-get "$formatted_link" "mega_downloads/$new_filename"; then
+              echo "{\"original\": \"$link\", \"downloaded\": \"$new_filename\"}" >> mega_downloads/downloaded_results.json
+            else
+              echo "❌ Error descargando $formatted_link, continuando..."
+            fi
           done
 
       - name: Upload files to My MEGA
@@ -131,11 +139,6 @@ jobs:
           
           for file in mega_downloads/*; do
             anime_name=$(jq -r '.[] | .name[0]' results/results_all_caps.json | tr -d '[:space:]')
-            cap_num=$(basename "$file" | grep -oE '[0-9]+')
-            date_suffix=$(date +"%Y%m%d")
-            new_filename="${anime_name}_cap_${cap_num}_${date_suffix}.mp4"
-            local_temp_file="mega_downloads/$new_filename"
-            mv "$file" "$local_temp_file"
             remote_folder="/Pery_SonPruebasNoLaBorres/anime/$anime_name"
 
             if ! mega-ls "$remote_folder" >/dev/null 2>&1; then
@@ -143,15 +146,14 @@ jobs:
               mega-mkdir "$remote_folder"
             fi
 
-            echo "📤 Subiendo $new_filename a MEGA en $remote_folder..."
-            if ! mega-put -c "$local_temp_file" "$remote_folder"; then
-              echo "❌ Error subiendo $new_filename, continuando..."
+            echo "📤 Subiendo $file a MEGA en $remote_folder..."
+            if ! mega-put -c "$file" "$remote_folder"; then
+              echo "❌ Error subiendo $file, continuando..."
               continue
             fi
 
             sleep 2
-            remote_path="$remote_folder/$new_filename"
-            echo "🔗 Obteniendo enlace de descarga para $remote_path..."
+            remote_path="$remote_folder/$(basename "$file")"
             uploaded_link=$(mega-export -a "$remote_path" | grep -o 'https://mega.nz/file/[a-zA-Z0-9_-]\+#[a-zA-Z0-9_-]\+')
 
             if [[ -z "$uploaded_link" ]]; then
@@ -160,10 +162,8 @@ jobs:
             fi
 
             echo "✅ Archivo subido: $uploaded_link"
-            echo "{\"original\": \"$file\", \"renamed\": \"$new_filename\", \"uploaded\": \"$uploaded_link\"}" >> mega_uploaded/uploaded_results.json
+            echo "{\"original\": \"$file\", \"uploaded\": \"$uploaded_link\"}" >> mega_uploaded/uploaded_results.json
           done
-          
-          echo "🚀 Proceso completado."
 
       - name: Upload JSON results to MEGA
         run: |
@@ -172,7 +172,7 @@ jobs:
 
       - name: Merge upload links with original JSON
         run: |
-          jq --slurpfile new_data mega_uploaded/uploaded_results.json '.links |= . + $new_data' results/results_all_caps.json > results/results_updated.json
+          jq --slurpfile new_data mega_uploaded/uploaded_results.json '.caps |= . + $new_data' results/results_all_caps.json > results/results_updated.json
 
       - name: Upload updated JSON
         uses: actions/upload-artifact@v4
