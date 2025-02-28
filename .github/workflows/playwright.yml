@@ -130,14 +130,14 @@ jobs:
             echo "⬇️ Descargando $formatted_link..."
             mega-get "$formatted_link" mega_downloads/ || echo "❌ Error descargando $formatted_link, continuando con el siguiente..."
           done
-            
+
       # Subir archivos nuevamente a MEGA
       - name: Upload files to My MEGA
         run: |
           mkdir -p mega_uploaded
           for file in mega_downloads/*; do
             echo "📤 Subiendo $file..."
-            mega-put "$file" /Pery(SonPruebasNoLaBorres)/
+            mega-put -c "$file" /Pery_SonPruebasNoLaBorres/anime/
             uploaded_link=$(mega-export -a "/Pery(SonPruebasNoLaBorres)/$(basename "$file")" | grep 'https://')
             echo "✅ Archivo subido: $uploaded_link"
             echo "{\"original\": \"$file\", \"uploaded\": \"$uploaded_link\"}" >> mega_uploaded/result.json
