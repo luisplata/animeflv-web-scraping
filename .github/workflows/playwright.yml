@@ -24,61 +24,136 @@ on:
           - AllCaps
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  
+
 jobs:
-  test:
+  karate-tests:
     timeout-minutes: 60
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - uses: actions/setup-node@v4
-      with:
-        node-version: lts/*
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
 
-    - name: Install dependencies
-      run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
-    - name: Install Playwright Browsers
-      run: npx playwright install --with-deps
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
 
-    - name: Run Playwright tests
-      run: |
-        if [ "${{ github.event.inputs.searchType }}" == "OfDay" ]; then
-          ANIME_NAME="${{ github.event.inputs.animeName }}" DISCORD_WEBHOOK="${{ github.event.inputs.discordWebhook }}" npx playwright test tests/AnimeFLV/test/listAnimeOfDay.spec.ts
-        else
-          ANIME_NAME="${{ github.event.inputs.animeName }}" DISCORD_WEBHOOK="${{ github.event.inputs.discordWebhook }}" npx playwright test tests/AnimeFLV/test/getAllCapsByAnime.spec.ts
-        fi
-      env:
-        CI: true
+      - name: Run Playwright tests
+        run: |
+          if [ "${{ github.event.inputs.searchType }}" == "OfDay" ]; then
+            ANIME_NAME="${{ github.event.inputs.animeName }}" DISCORD_WEBHOOK="${{ github.event.inputs.discordWebhook }}" npx playwright test tests/AnimeFLV/test/listAnimeOfDay.spec.ts
+          else
+            ANIME_NAME="${{ github.event.inputs.animeName }}" DISCORD_WEBHOOK="${{ github.event.inputs.discordWebhook }}" npx playwright test tests/AnimeFLV/test/getAllCapsByAnime.spec.ts
+          fi
+        env:
+          CI: true
 
-    - name: Read JSON output
-      if: ${{ github.event.inputs.Webhook != '' }}
-      id: read_output
-      run: |
-        if [ "${{ github.event.inputs.searchType }}" == "OfDay" ]; then
-          cat results/results_of_day.json
-          echo "json_output=$(jq -c . results/results_of_day.json)" >> $GITHUB_ENV
-        else
-          cat results/results_all_caps.json
-          echo "json_output=$(jq -c . results/results_all_caps.json)" >> $GITHUB_ENV
-        fi
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: results/
+          retention-days: 30
 
-    - name: Send Webhook to Backend
-      if: ${{ github.event.inputs.Webhook != '' }}
-      run: |
-        curl -X POST "${{ github.event.inputs.Webhook }}" \
-              -H "Content-Type: application/json" \
-              -d '{
-                    "uuid": "${{ github.event.inputs.uuid }}",
-                    "animeName": "${{ github.event.inputs.animeName }}",
-                    "status": "completed",
-                    "results": ${{ env.json_output }}
-                  }'
+  send-webhook:
+    needs: karate-tests
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.Webhook != '' }}
+    steps:
+      - uses: actions/checkout@v4
 
-    - uses: actions/upload-artifact@v4
-      if: ${{ !cancelled() }}
-      with:
-        name: playwright-report
-        path: playwright-report/
-        retention-days: 30
+      - name: Download test results
+        uses: actions/download-artifact@v4
+        with:
+          name: test-results
+          path: results/
+
+      - name: Read JSON output
+        id: read_output
+        run: |
+          if [ "${{ github.event.inputs.searchType }}" == "OfDay" ]; then
+            cat results/results_of_day.json
+            echo "json_output=$(jq -c . results/results_of_day.json)" >> $GITHUB_ENV
+          else
+            cat results/results_all_caps.json
+            echo "json_output=$(jq -c . results/results_all_caps.json)" >> $GITHUB_ENV
+          fi
+
+      - name: Send Webhook to Backend
+        run: |
+          curl -X POST "${{ github.event.inputs.Webhook }}" \
+                -H "Content-Type: application/json" \
+                -d '{
+                      "uuid": "${{ github.event.inputs.uuid }}",
+                      "animeName": "${{ github.event.inputs.animeName }}",
+                      "status": "completed",
+                      "results": ${{ env.json_output }}
+                    }'
+
+  mega-operations:
+    needs: karate-tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download test results
+        uses: actions/download-artifact@v4
+        with:
+          name: test-results
+          path: results/
+
+      # Instalar MEGAcmd correctamente
+      - name: Install MEGAcmd
+        run: |
+          sudo apt update
+          sudo apt install -y gnupg wget
+          wget -O- https://mega.nz/linux/repo/Debian_11/Release.key | sudo tee /etc/apt/trusted.gpg.d/mega.asc
+          echo "deb https://mega.nz/linux/repo/Debian_11/ ./" | sudo tee /etc/apt/sources.list.d/megacmd.list
+          sudo apt update
+          sudo apt install -y megacmd
+          mega-login "${{ secrets.MEGA_EMAIL }}" "${{ secrets.MEGA_PASSWORD }}"
+
+      # Descargar archivos desde MEGA
+      - name: Download files from MEGA
+        run: |
+          mkdir -p mega_downloads
+          jq -r '.links[]' results/results_all_caps.json | while read -r link; do
+            echo "⬇️ Descargando $link..."
+            mega-get "$link" mega_downloads/
+          done
+
+      # Subir archivos nuevamente a MEGA
+      - name: Upload files to My MEGA
+        run: |
+          mkdir -p mega_uploaded
+          for file in mega_downloads/*; do
+            echo "📤 Subiendo $file..."
+            mega-put "$file" /Pery(SonPruebasNoLaBorres)/
+            uploaded_link=$(mega-export -a "/Pery(SonPruebasNoLaBorres)/$(basename "$file")" | grep 'https://')
+            echo "✅ Archivo subido: $uploaded_link"
+            echo "{\"original\": \"$file\", \"uploaded\": \"$uploaded_link\"}" >> mega_uploaded/result.json
+          done
+
+      # Fusionar JSON con enlaces nuevos
+      - name: Merge upload links with original JSON
+        run: |
+          jq --slurpfile new_data mega_uploaded/result.json '.links |= . + $new_data' results/results_all_caps.json > results/results_updated.json
+
+      # Subir JSON actualizado
+      - name: Upload updated JSON
+        uses: actions/upload-artifact@v4
+        with:
+          name: updated-results
+          path: results/results_updated.json
+          retention-days: 30
+
+      # Limpiar datos y caché residual
+      - name: Cleanup MEGA cache
+        run: |
+          mega-logout
+          rm -rf mega_downloads mega_uploaded
+          rm -f results/results_updated.json
