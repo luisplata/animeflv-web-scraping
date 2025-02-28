@@ -54,7 +54,7 @@ jobs:
 
       - name: check files to upload
         run: |
-          ls /
+          ls results/
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
@@ -125,12 +125,13 @@ jobs:
       - name: Download files from MEGA
         run: |
           mkdir -p mega_downloads
-          jq -r '.links[]' results/results_all_caps.json | while read -r link; do
+          jq -r '.[].caps[].view_url[]' results/results_all_caps.json | while read -r link; do
             echo "⬇️ Descargando $link..."
             mega-get "$link" mega_downloads/
           done
 
-      # Subir archivos nuevamente a MEGA
+
+# Subir archivos nuevamente a MEGA
       - name: Upload files to My MEGA
         run: |
           mkdir -p mega_uploaded
