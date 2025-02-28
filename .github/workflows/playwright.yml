@@ -138,7 +138,7 @@ jobs:
           for file in mega_downloads/*; do
             echo "📤 Subiendo $file..."
             mega-put -c "$file" /Pery_SonPruebasNoLaBorres/anime/
-            uploaded_link=$(mega-export -a "/Pery(SonPruebasNoLaBorres)/$(basename "$file")" | grep 'https://')
+            uploaded_link=$(mega-export -a "/Pery_SonPruebasNoLaBorres/$(basename "$file")" | grep 'https://')
             echo "✅ Archivo subido: $uploaded_link"
             echo "{\"original\": \"$file\", \"uploaded\": \"$uploaded_link\"}" >> mega_uploaded/result.json
           done
