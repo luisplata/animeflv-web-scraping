@@ -135,13 +135,21 @@ jobs:
       - name: Upload files to My MEGA
         run: |
           mkdir -p mega_uploaded
+          
           for file in mega_downloads/*; do
-            # Extraer nombre del anime desde el JSON
+            # Extraer el nombre del anime y limpiar espacios
             anime_name=$(jq -r '.[] | .name[0]' results/results_all_caps.json | tr -d '[:space:]')
             
-            # Crear carpeta con el nombre del anime
+            # Definir la carpeta remota correctamente
             remote_folder="/Pery_SonPruebasNoLaBorres/anime/$anime_name"
-            mega-mkdir -p "$remote_folder"
+            
+            # Verificar si la carpeta ya existe antes de crearla
+            if ! mega-ls "$remote_folder" >/dev/null 2>&1; then
+            echo "📂 Creando carpeta en MEGA: $remote_folder"
+            mega-mkdir "$remote_folder"
+            else
+            echo "📂 Carpeta $remote_folder ya existe, continuando..."
+            fi
             
             # Agregar timestamp al nombre del archivo
             timestamp=$(date +"%Y-%m-%d_%H-%M-%S")
@@ -152,7 +160,10 @@ jobs:
             mv "$file" "$local_temp_file"
             
             echo "📤 Subiendo $new_filename a MEGA en $remote_folder..."
-            mega-put -c "$local_temp_file" "$remote_folder"
+            if ! mega-put -c "$local_temp_file" "$remote_folder"; then
+            echo "❌ Error subiendo $new_filename, continuando con el siguiente..."
+            continue
+            fi
             
             # Esperar para sincronización
             sleep 2
@@ -161,7 +172,7 @@ jobs:
             remote_path="$remote_folder/$new_filename"
             echo "🔗 Obteniendo enlace de descarga para $remote_path..."
             
-            uploaded_link=$(mega-export -a "$remote_path" | grep 'https://')
+            uploaded_link=$(mega-export -a "$remote_path" | grep -o 'https://mega.nz/file/[a-zA-Z0-9_-]\+#[a-zA-Z0-9_-]\+')
             
             if [[ -z "$uploaded_link" ]]; then
             echo "❌ Error obteniendo el enlace de $remote_path"
@@ -173,6 +184,7 @@ jobs:
             # Guardar resultado en JSON
             echo "{\"original\": \"$file\", \"renamed\": \"$new_filename\", \"uploaded\": \"$uploaded_link\"}" >> mega_uploaded/result.json
           done
+          
           echo "🚀 Proceso completado."
 
 # Fusionar JSON con enlaces nuevos
