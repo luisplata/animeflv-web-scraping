@@ -127,8 +127,9 @@ jobs:
           mkdir -p mega_downloads
           jq -r '.[].caps[].view_url[]' results/results_all_caps.json | while read -r link; do
             echo "⬇️ Descargando $link..."
-            mega-get "$link" mega_downloads/
+            mega-get "$link" mega_downloads/ || echo "❌ Error descargando $link, continuando..."
           done
+
 
 
 # Subir archivos nuevamente a MEGA
