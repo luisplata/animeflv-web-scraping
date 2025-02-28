@@ -52,10 +52,6 @@ jobs:
         env:
           CI: true
 
-      - name: check files to upload
-        run: |
-          ls results/
-
       - name: Upload test results
         uses: actions/upload-artifact@v4
         with:
@@ -110,7 +106,6 @@ jobs:
           name: test-results
           path: results/
 
-      # Instalar MEGAcmd correctamente
       - name: Install MEGAcmd
         run: |
           sudo apt update
@@ -121,78 +116,64 @@ jobs:
           sudo apt install -y megacmd
           mega-login "${{ secrets.MEGA_EMAIL }}" "${{ secrets.MEGA_PASSWORD }}"
 
-      # Descargar archivos desde MEGA
       - name: Download files from MEGA
         run: |
           mkdir -p mega_downloads
           jq -r '.[] | .caps[].view_url[0]' results/results_all_caps.json | while read -r link; do
             formatted_link=$(echo "$link" | sed -E 's|https://mega.nz/embed/!([^!]*)!([^ ]*)|https://mega.nz/file/\1#\2|')
             echo "⬇️ Descargando $formatted_link..."
-            mega-get "$formatted_link" mega_downloads/ || echo "❌ Error descargando $formatted_link, continuando con el siguiente..."
+            mega-get "$formatted_link" mega_downloads/ || echo "❌ Error descargando $formatted_link, continuando..."
           done
 
-      # Subir archivos nuevamente a MEGA
       - name: Upload files to My MEGA
         run: |
           mkdir -p mega_uploaded
           
           for file in mega_downloads/*; do
-            # Extraer el nombre del anime y limpiar espacios
             anime_name=$(jq -r '.[] | .name[0]' results/results_all_caps.json | tr -d '[:space:]')
-            
-            # Definir la carpeta remota correctamente
-            remote_folder="/Pery_SonPruebasNoLaBorres/anime/$anime_name"
-            
-            # Verificar si la carpeta ya existe antes de crearla
-            if ! mega-ls "$remote_folder" >/dev/null 2>&1; then
-            echo "📂 Creando carpeta en MEGA: $remote_folder"
-            mega-mkdir "$remote_folder"
-            else
-            echo "📂 Carpeta $remote_folder ya existe, continuando..."
-            fi
-            
-            # Agregar timestamp al nombre del archivo
-            timestamp=$(date +"%Y-%m-%d_%H-%M-%S")
-            new_filename="${timestamp}_$(basename "$file")"
+            cap_num=$(basename "$file" | grep -oE '[0-9]+')
+            date_suffix=$(date +"%Y%m%d")
+            new_filename="${anime_name}_cap_${cap_num}_${date_suffix}.mp4"
             local_temp_file="mega_downloads/$new_filename"
-            
-            # Renombrar localmente
             mv "$file" "$local_temp_file"
-            
+            remote_folder="/Pery_SonPruebasNoLaBorres/anime/$anime_name"
+
+            if ! mega-ls "$remote_folder" >/dev/null 2>&1; then
+              echo "📂 Creando carpeta en MEGA: $remote_folder"
+              mega-mkdir "$remote_folder"
+            fi
+
             echo "📤 Subiendo $new_filename a MEGA en $remote_folder..."
             if ! mega-put -c "$local_temp_file" "$remote_folder"; then
-            echo "❌ Error subiendo $new_filename, continuando con el siguiente..."
-            continue
+              echo "❌ Error subiendo $new_filename, continuando..."
+              continue
             fi
-            
-            # Esperar para sincronización
+
             sleep 2
-            
-            # Obtener el link del archivo subido
             remote_path="$remote_folder/$new_filename"
             echo "🔗 Obteniendo enlace de descarga para $remote_path..."
-            
             uploaded_link=$(mega-export -a "$remote_path" | grep -o 'https://mega.nz/file/[a-zA-Z0-9_-]\+#[a-zA-Z0-9_-]\+')
-            
+
             if [[ -z "$uploaded_link" ]]; then
-            echo "❌ Error obteniendo el enlace de $remote_path"
-            continue
+              echo "❌ Error obteniendo el enlace de $remote_path"
+              continue
             fi
-            
+
             echo "✅ Archivo subido: $uploaded_link"
-            
-            # Guardar resultado en JSON
-            echo "{\"original\": \"$file\", \"renamed\": \"$new_filename\", \"uploaded\": \"$uploaded_link\"}" >> mega_uploaded/result.json
+            echo "{\"original\": \"$file\", \"renamed\": \"$new_filename\", \"uploaded\": \"$uploaded_link\"}" >> mega_uploaded/uploaded_results.json
           done
           
           echo "🚀 Proceso completado."
 
-# Fusionar JSON con enlaces nuevos
+      - name: Upload JSON results to MEGA
+        run: |
+          mega-put -c mega_uploaded/uploaded_results.json /Pery_SonPruebasNoLaBorres/anime/
+          echo "📂 JSON de resultados subido a MEGA."
+
       - name: Merge upload links with original JSON
         run: |
-          jq --slurpfile new_data mega_uploaded/result.json '.links |= . + $new_data' results/results_all_caps.json > results/results_updated.json
+          jq --slurpfile new_data mega_uploaded/uploaded_results.json '.links |= . + $new_data' results/results_all_caps.json > results/results_updated.json
 
-      # Subir JSON actualizado
       - name: Upload updated JSON
         uses: actions/upload-artifact@v4
         with:
@@ -200,7 +181,6 @@ jobs:
           path: results/results_updated.json
           retention-days: 30
 
-      # Limpiar datos y caché residual
       - name: Cleanup MEGA cache
         run: |
           mega-logout
