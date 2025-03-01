@@ -9,7 +9,7 @@ on:
         description: 'Discord webhook to send the report'
         required: false
       Webhook:
-        description: 'webhook to send the result'
+        description: 'Webhook to send the result'
         required: false
       uuid:
         description: 'User UUID'
@@ -118,54 +118,37 @@ jobs:
 
       - name: Download files from MEGA with correct names
         run: |
-          mkdir -p mega_downloads
+          mkdir -p mega_downloads mega_uploaded
+          echo "[" > mega_uploaded/uploaded_results.json
+
           jq -c '.[] | .caps[] | {title: .title, view_url: .view_url[0]}' results/results_all_caps.json | while read -r line; do
             title=$(echo "$line" | jq -r '.title')
             link=$(echo "$line" | jq -r '.view_url')
 
-            # Validar si el enlace es válido
             if [[ "$link" == "null" || -z "$link" ]]; then
               echo "❌ Saltando $title porque no tiene un enlace válido."
               continue
             fi
 
-            # Convertir el enlace de MEGA
             formatted_link=$(echo "$link" | sed -E 's|https://mega.nz/embed/!([^!]*)!([^ ]*)|https://mega.nz/file/\1#\2|')
-
-            # Obtener el nombre del anime desde el JSON
             anime_name=$(jq -r '.[] | .name[0]' results/results_all_caps.json | tr -d '[:space:]')
-
-            # Extraer el número del episodio de la estructura del título
             cap_num=$(echo "$title" | grep -oE '[0-9]+$' || echo "00")
-
-            # Obtener fecha actual para agregarla al nombre
             date_suffix=$(date +"%Y%m%d")
-
-            # Crear el nombre del archivo con formato correcto
             new_filename="${anime_name}_cap_${cap_num}_${date_suffix}.mp4"
-            new_filename=$(echo "$new_filename" | tr ' ' '_')  # Remover espacios
+            new_filename=$(echo "$new_filename" | tr ' ' '_')
 
             echo "⬇️ Descargando $formatted_link como $new_filename..."
-
-            # Descargar y validar éxito
             if mega-get "$formatted_link" "mega_downloads/$new_filename"; then
-              if [[ ! -s mega_uploaded/uploaded_results.json ]]; then
-                echo "[" > mega_uploaded/uploaded_results.json
-                else
-                echo "," >> mega_uploaded/uploaded_results.json
-                fi
-                
-                echo "{\"original\": \"$link\", \"downloaded\": \"$new_filename\"}" >> mega_uploaded/uploaded_results.json
+              echo "{\"original\": \"$link\", \"downloaded\": \"$new_filename\"}," >> mega_uploaded/uploaded_results.json
             else
               echo "❌ Error descargando $formatted_link, continuando..."
             fi
           done
+          sed -i '$ s/,$//' mega_uploaded/uploaded_results.json
           echo "]" >> mega_uploaded/uploaded_results.json
 
       - name: Upload files to My MEGA
         run: |
-          mkdir -p mega_uploaded
-          
           for file in mega_downloads/*; do
             anime_name=$(jq -r '.[] | .name[0]' results/results_all_caps.json | tr -d '[:space:]')
             remote_folder="/Pery_SonPruebasNoLaBorres/anime/$anime_name"
@@ -191,8 +174,10 @@ jobs:
             fi
 
             echo "✅ Archivo subido: $uploaded_link"
-            echo "{\"original\": \"$file\", \"uploaded\": \"$uploaded_link\"}" >> mega_uploaded/uploaded_results.json
+            echo "{\"original\": \"$file\", \"uploaded\": \"$uploaded_link\"}," >> mega_uploaded/uploaded_results.json
           done
+          sed -i '$ s/,$//' mega_uploaded/uploaded_results.json
+          echo "]" >> mega_uploaded/uploaded_results.json
 
       - name: Upload JSON results to MEGA
         run: |
@@ -201,7 +186,7 @@ jobs:
 
       - name: Merge upload links with original JSON
         run: |
-          jq --slurpfile new_data mega_uploaded/uploaded_results.json '.caps |= . + $new_data' results/results_all_caps.json > results/results_updated.json
+          jq --slurpfile new_data mega_uploaded/uploaded_results.json '.[0].caps += $new_data' results/results_all_caps.json > results/results_updated.json
 
       - name: Upload updated JSON
         uses: actions/upload-artifact@v4
