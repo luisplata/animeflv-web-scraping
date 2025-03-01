@@ -119,13 +119,35 @@ jobs:
       - name: Download files from MEGA with correct names
         run: |
           mkdir -p mega_downloads
-          jq -r '.[] | .caps[] | "\(.title) \(.view_url[0])"' results/results_all_caps.json | while read -r title link; do
+          jq -c '.[] | .caps[] | {title: .title, view_url: .view_url[0]}' results/results_all_caps.json | while read -r line; do
+            title=$(echo "$line" | jq -r '.title')
+            link=$(echo "$line" | jq -r '.view_url')
+
+            # Validar si el enlace es válido
+            if [[ "$link" == "null" || -z "$link" ]]; then
+              echo "❌ Saltando $title porque no tiene un enlace válido."
+              continue
+            fi
+
+            # Convertir el enlace de MEGA
             formatted_link=$(echo "$link" | sed -E 's|https://mega.nz/embed/!([^!]*)!([^ ]*)|https://mega.nz/file/\1#\2|')
+
+            # Obtener el nombre del anime desde el JSON
             anime_name=$(jq -r '.[] | .name[0]' results/results_all_caps.json | tr -d '[:space:]')
-            cap_num=$(echo "$title" | grep -oE '[0-9]+$')
+
+            # Extraer el número del episodio de la estructura del título
+            cap_num=$(echo "$title" | grep -oE '[0-9]+$' || echo "00")
+
+            # Obtener fecha actual para agregarla al nombre
             date_suffix=$(date +"%Y%m%d")
+
+            # Crear el nombre del archivo con formato correcto
             new_filename="${anime_name}_cap_${cap_num}_${date_suffix}.mp4"
+            new_filename=$(echo "$new_filename" | tr ' ' '_')  # Remover espacios
+
             echo "⬇️ Descargando $formatted_link como $new_filename..."
+
+            # Descargar y validar éxito
             if mega-get "$formatted_link" "mega_downloads/$new_filename"; then
               echo "{\"original\": \"$link\", \"downloaded\": \"$new_filename\"}" >> mega_downloads/downloaded_results.json
             else
