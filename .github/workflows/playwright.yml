@@ -149,11 +149,18 @@ jobs:
 
             # Descargar y validar éxito
             if mega-get "$formatted_link" "mega_downloads/$new_filename"; then
-              echo "{\"original\": \"$link\", \"downloaded\": \"$new_filename\"}" >> mega_downloads/downloaded_results.json
+              if [[ ! -s mega_uploaded/uploaded_results.json ]]; then
+                echo "[" > mega_uploaded/uploaded_results.json
+                else
+                echo "," >> mega_uploaded/uploaded_results.json
+                fi
+                
+                echo "{\"original\": \"$link\", \"downloaded\": \"$new_filename\"}" >> mega_uploaded/uploaded_results.json
             else
               echo "❌ Error descargando $formatted_link, continuando..."
             fi
           done
+          echo "]" >> mega_uploaded/uploaded_results.json
 
       - name: Upload files to My MEGA
         run: |
