@@ -25,11 +25,11 @@ export class DirectoryOfAllAnimes {
     }
 
     public async getAnimeLink(anime: Locator): Promise<string> {
-        return await anime.locator(this.directory.getAnimeLink).first().getAttribute('href');
+        return (await anime.locator(this.directory.getAnimeLink).first().getAttribute('href')) ?? '';
     }
 
     public async getAnimeImage(anime: Locator): Promise<string> {
-        return await anime.locator(this.directory.getAnimeImage).first().getAttribute('src');
+        return await anime.locator(this.directory.getAnimeImage).first().getAttribute('src') ?? '';
     }
 
     public async nextPage() {

@@ -1,0 +1,42 @@
+name: Get Lasted Anime published
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: '0 8,16 * * *'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+  scrapping:
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
+
+      - name: Run Playwright tests
+        run: |
+          npm run get_all_episodes_by_anime_name
+        env:
+          CI: true
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          SERVER_WEBHOOK: ${{ secrets.SERVER_WEBHOOK }}
+          SERVER_API: ${{ secrets.SERVER_API }}
+          SERVER_SECRET: ${{ secrets.SERVER_SECRET }}
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: results/
+          retention-days: 3

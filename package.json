@@ -6,7 +6,8 @@
     "test": "npx playwright test",
     "test:debug": "npx playwright test --debug",
     "clean": "npm cache clean --force",
-    "daily": "npm run test -- tests/AnimeFLV/test/AllAnimesByDay.spec.ts"
+    "daily": "npm run test -- tests/AnimeFLV/test/AllAnimesByDay.spec.ts",
+    "get_all_episodes_by_anime_name": "npm run test -- tests/AnimeFLV/test/GetAllEpisodesByAnimeName.spec.ts"
   },
   "keywords": [],
   "author": "",
