@@ -1,8 +1,8 @@
 import { writeFileSync, existsSync, mkdirSync } from "fs";
 import { join } from "path";
-import { AnimeTarget } from "../Data/data";
+import {Anime} from "../Data/json";
 
-export const generateFileWithResults = (json: AnimeTarget[], nameOfFile: string): string => {
+export const generateFileWithResults = (json: Anime[], nameOfFile: string): string => {
     const resultsDir = join(__dirname, "../../../results");
     if (!existsSync(resultsDir)) {
         mkdirSync(resultsDir);

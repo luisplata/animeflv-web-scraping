@@ -12,6 +12,12 @@ npm install
 npm run test
 ```
 
+### run specific test
+
+```bash
+npm run test -- tests/AnimeFLV/test/listAnimeOfDay.spec.ts
+```
+
 ### clean
 
 ```bash

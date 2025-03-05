@@ -1,16 +1,17 @@
-import { Locator, Page } from "@playwright/test";
-import { User } from "../Actor/User";
-import { Capitulo } from "../Data/data";
-import { SpecificCap } from "../Page/SpecificCap";
+import {SpecificCap} from "../Page/SpecificCap";
+import {Episode, Source} from "../Data/json";
 
-export const getProvider = (userFrom: User) => async (cap: Capitulo, page: SpecificCap) => {
+export const getProvider = () => async (cap: Episode, page: SpecificCap) => {
+    const unsupport = ["netu", "stape"];
     const capPage = await page.getListOfOptions();
     for (let option of capPage) {
         let titleOption = await page.getTitleOfOption(option);
-        if (titleOption.toLowerCase() === userFrom.getProvider().toLowerCase()) {
-            let megaUrl = await page.getIframeMega(option);
-            console.log("🔗 Cap to get provider::", cap.getTitle, cap.getUrl, userFrom.getProvider(), megaUrl);
-            await cap.addViewUrl(megaUrl);
+        if (unsupport.some(name => titleOption.toLowerCase().includes(name.toLowerCase()))) {
+            continue;
         }
+        let videoSource = await page.getLinkToView(option);
+        console.log("🔗 Cap to get provider::", cap.title, cap.number, titleOption, videoSource);
+        let source = new Source(titleOption, videoSource);
+        await cap.AddSource(source);
     }
 };

@@ -6,6 +6,7 @@ export class HomePage extends BasePage {
     private readonly linkToAnime = "a";
     private readonly titleOfAnime = "strong";
     private readonly image = '//img';
+    private readonly capi = "//span[@class='Capi']";
 
     public async getListOfAnimeByDay(): Promise<Locator[]> {
         return await this.page.locator(this.listOfAnimeByDay).all();
@@ -23,4 +24,7 @@ export class HomePage extends BasePage {
         return await anime.locator(this.image).first().getAttribute('src');
     }
 
+    async getCamNumber(animeOfDay: Locator): Promise<string> {
+        return await animeOfDay.locator(this.capi).innerText();
+    }
 }

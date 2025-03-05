@@ -1,16 +1,11 @@
-import { Actor } from "../../../Actor/Actor";
+import {Actor} from "../../../Actor/Actor";
 
 export class User extends Actor {
-    private provider: string;
-    private page : string;
-    constructor(name: string, provider: string, page: string) {
-        super(name);
-        this.provider = provider;
-        this.page = page;
-    }
+    private readonly page: string;
 
-    getProvider(): string {
-        return this.provider;
+    constructor(name: string, page: string) {
+        super(name);
+        this.page = page;
     }
 
     getPage(): string {

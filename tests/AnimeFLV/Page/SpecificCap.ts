@@ -5,7 +5,7 @@ export class SpecificCap extends BasePage {
     private readonly listOfOptions = "//ul[@role='tablist']/li";
     private readonly titleOfOption = "data-original-title";
     private readonly titleOfOptionAlt = "title";
-    private readonly iframeMega = "iframe[src*='mega.nz']";
+    private readonly linkToViewCap = "//div[@id='video_box']/iframe";
 
     public async getListOfOptions(): Promise<Locator[]> {
         return await this.page.locator(this.listOfOptions).all();
@@ -15,11 +15,11 @@ export class SpecificCap extends BasePage {
         return await option.getAttribute(this.titleOfOption) ?? await option.getAttribute(this.titleOfOptionAlt) ?? '';
     }
 
-    public async getIframeMega(option: Locator): Promise<string> {
+    public async getLinkToView(option: Locator): Promise<string> {
         let popupOpened = false;
         do {
             const [popup] = await Promise.all([
-                this.page.waitForEvent('popup', {timeout: 3000}).catch(() => null),
+                this.page.waitForEvent('popup', {timeout: 4000}).catch(() => null),
                 option.click(),
             ]);
 
@@ -32,15 +32,15 @@ export class SpecificCap extends BasePage {
             }
 
             if (!this.page.isClosed()) {
-                await this.page.waitForTimeout(1000);
+                await this.page.waitForTimeout(2000);
             }
 
         } while (popupOpened);
 
-        let mega = await this.page.locator(this.iframeMega).first();
+        let mega = await this.page.locator(this.linkToViewCap).first();
         if (mega) {
             let src = await mega.getAttribute("src");
-            //console.log("✅ Mega encontrado::", src);
+            console.log("✅ video found!::", src);
             if (src) {
                 return src;
             }

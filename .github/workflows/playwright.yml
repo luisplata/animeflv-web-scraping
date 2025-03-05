@@ -1,32 +1,14 @@
-name: Playwright Tests
+name: Get Lasted Anime published
 on:
-  workflow_dispatch:
-    inputs:
-      animeName:
-        description: 'Name of the anime'
-        required: true
-      discordWebhook:
-        description: 'Discord webhook to send the report'
-        required: false
-      Webhook:
-        description: 'Webhook to send the result'
-        required: false
-      uuid:
-        description: 'User UUID'
-        required: true
-      searchType:
-        type: choice
-        description: 'Type of search (OfDay or AllCaps)'
-        required: true
-        default: 'AllCaps'
-        options:
-          - OfDay
-          - AllCaps
+  workflow_dispatch: {}
+  schedule:
+    - cron: '0 8-16 * * *'
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
-  karate-tests:
+  scrapping:
     timeout-minutes: 60
     runs-on: ubuntu-latest
     steps:
@@ -44,159 +26,16 @@ jobs:
 
       - name: Run Playwright tests
         run: |
-          if [ "${{ github.event.inputs.searchType }}" == "OfDay" ]; then
-            ANIME_NAME="${{ github.event.inputs.animeName }}" DISCORD_WEBHOOK="${{ github.event.inputs.discordWebhook }}" npx playwright test tests/AnimeFLV/test/listAnimeOfDay.spec.ts
-          else
-            ANIME_NAME="${{ github.event.inputs.animeName }}" DISCORD_WEBHOOK="${{ github.event.inputs.discordWebhook }}" npx playwright test tests/AnimeFLV/test/getAllCapsByAnime.spec.ts
-          fi
+          npm run daily
         env:
           CI: true
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          SERVER_WEBHOOK: ${{ secrets.SERVER_WEBHOOK }}
+          SERVER_SECRET: ${{ secrets.SERVER_SECRET }}
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
         with:
           name: test-results
           path: results/
-          retention-days: 30
-
-  send-webhook:
-    needs: karate-tests
-    runs-on: ubuntu-latest
-    if: ${{ github.event.inputs.Webhook != '' }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Download test results
-        uses: actions/download-artifact@v4
-        with:
-          name: test-results
-          path: results/
-
-      - name: Read JSON output
-        id: read_output
-        run: |
-          if [ "${{ github.event.inputs.searchType }}" == "OfDay" ]; then
-            cat results/results_of_day.json
-            echo "json_output=$(jq -c . results/results_of_day.json)" >> $GITHUB_ENV
-          else
-            cat results/results_all_caps.json
-            echo "json_output=$(jq -c . results/results_all_caps.json)" >> $GITHUB_ENV
-          fi
-
-      - name: Send Webhook to Backend
-        run: |
-          curl -X POST "${{ github.event.inputs.Webhook }}" \
-                -H "Content-Type: application/json" \
-                -d '{
-                      "uuid": "${{ github.event.inputs.uuid }}",
-                      "animeName": "${{ github.event.inputs.animeName }}",
-                      "status": "completed",
-                      "results": ${{ env.json_output }}
-                    }'
-
-  mega-operations:
-    needs: karate-tests
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Download test results
-        uses: actions/download-artifact@v4
-        with:
-          name: test-results
-          path: results/
-
-      - name: Install MEGAcmd
-        run: |
-          sudo apt update
-          sudo apt install -y gnupg wget
-          wget -O- https://mega.nz/linux/repo/Debian_11/Release.key | sudo tee /etc/apt/trusted.gpg.d/mega.asc
-          echo "deb https://mega.nz/linux/repo/Debian_11/ ./" | sudo tee /etc/apt/sources.list.d/megacmd.list
-          sudo apt update
-          sudo apt install -y megacmd
-          mega-login "${{ secrets.MEGA_EMAIL }}" "${{ secrets.MEGA_PASSWORD }}"
-
-      - name: Download files from MEGA with correct names
-        run: |
-          mkdir -p mega_downloads mega_uploaded
-          echo "[" > mega_uploaded/uploaded_results.json
-
-          jq -c '.[] | .caps[] | {title: .title, view_url: .view_url[0]}' results/results_all_caps.json | while read -r line; do
-            title=$(echo "$line" | jq -r '.title')
-            link=$(echo "$line" | jq -r '.view_url')
-
-            if [[ "$link" == "null" || -z "$link" ]]; then
-              echo "❌ Saltando $title porque no tiene un enlace válido."
-              continue
-            fi
-
-            formatted_link=$(echo "$link" | sed -E 's|https://mega.nz/embed/!([^!]*)!([^ ]*)|https://mega.nz/file/\1#\2|')
-            anime_name=$(jq -r '.[] | .name[0]' results/results_all_caps.json | tr -d '[:space:]')
-            cap_num=$(echo "$title" | grep -oE '[0-9]+$' || echo "00")
-            date_suffix=$(date +"%Y%m%d")
-            new_filename="${anime_name}_cap_${cap_num}_${date_suffix}.mp4"
-            new_filename=$(echo "$new_filename" | tr ' ' '_')
-
-            echo "⬇️ Descargando $formatted_link como $new_filename..."
-            if mega-get "$formatted_link" "mega_downloads/$new_filename"; then
-              echo "{\"original\": \"$link\", \"downloaded\": \"$new_filename\"}," >> mega_uploaded/uploaded_results.json
-            else
-              echo "❌ Error descargando $formatted_link, continuando..."
-            fi
-          done
-          sed -i '$ s/,$//' mega_uploaded/uploaded_results.json
-          echo "]" >> mega_uploaded/uploaded_results.json
-
-      - name: Upload files to My MEGA
-        run: |
-          for file in mega_downloads/*; do
-            anime_name=$(jq -r '.[] | .name[0]' results/results_all_caps.json | tr -d '[:space:]')
-            remote_folder="/Pery_SonPruebasNoLaBorres/anime/$anime_name"
-
-            if ! mega-ls "$remote_folder" >/dev/null 2>&1; then
-              echo "📂 Creando carpeta en MEGA: $remote_folder"
-              mega-mkdir "$remote_folder"
-            fi
-
-            echo "📤 Subiendo $file a MEGA en $remote_folder..."
-            if ! mega-put -c "$file" "$remote_folder"; then
-              echo "❌ Error subiendo $file, continuando..."
-              continue
-            fi
-
-            sleep 2
-            remote_path="$remote_folder/$(basename "$file")"
-            uploaded_link=$(mega-export -a "$remote_path" | grep -o 'https://mega.nz/file/[a-zA-Z0-9_-]\+#[a-zA-Z0-9_-]\+')
-
-            if [[ -z "$uploaded_link" ]]; then
-              echo "❌ Error obteniendo el enlace de $remote_path"
-              continue
-            fi
-
-            echo "✅ Archivo subido: $uploaded_link"
-            echo "{\"original\": \"$file\", \"uploaded\": \"$uploaded_link\"}," >> mega_uploaded/uploaded_results.json
-          done
-          sed -i '$ s/,$//' mega_uploaded/uploaded_results.json
-          echo "]" >> mega_uploaded/uploaded_results.json
-
-      - name: Upload JSON results to MEGA
-        run: |
-          mega-put -c mega_uploaded/uploaded_results.json /Pery_SonPruebasNoLaBorres/anime/
-          echo "📂 JSON de resultados subido a MEGA."
-
-      - name: Merge upload links with original JSON
-        run: |
-          jq --slurpfile new_data mega_uploaded/uploaded_results.json '.[0].caps += $new_data' results/results_all_caps.json > results/results_updated.json
-
-      - name: Upload updated JSON
-        uses: actions/upload-artifact@v4
-        with:
-          name: updated-results
-          path: results/results_updated.json
-          retention-days: 30
-
-      - name: Cleanup MEGA cache
-        run: |
-          mega-logout
-          rm -rf mega_downloads mega_uploaded
-          rm -f results/results_updated.json
+          retention-days: 3
