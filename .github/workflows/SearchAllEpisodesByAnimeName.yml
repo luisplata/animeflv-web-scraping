@@ -1,4 +1,4 @@
-name: Get Lasted Anime published
+name: Scrapping All Animes, twice time by day
 on:
   workflow_dispatch: {}
   schedule:
