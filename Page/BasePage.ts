@@ -7,7 +7,7 @@ export class BasePage {
     constructor(page: Page, url: string) {
         this.url = url;
         this.page = page;
-        console.log("🔗 Page::", this.url);
+        //console.log("🔗 Page::", this.url);
     }
 
     public async init() {

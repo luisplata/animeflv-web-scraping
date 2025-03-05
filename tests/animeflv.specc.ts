@@ -1,5 +1,4 @@
 import { test, expect } from '@playwright/test';
-import { Capitulo } from './AnimeFLV/Data/data';
 
 test.describe.configure({ mode: 'parallel' });
 
@@ -12,18 +11,18 @@ test.describe.parallel('Animeflv', () => {
         await page.goto(base_url, { timeout: 60000, waitUntil: 'domcontentloaded' });
 
         let list = await page.locator("//ul[contains(@class, 'ListEpisodios')]/li").all();
-        let caps_today: Capitulo[] = [];
+        let caps_today: any = [];
 
         for (let cap of list) {
             let url = await cap.locator("a").first().getAttribute("href");
             let name = (await cap.locator("strong").textContent()) ?? "";
-            if (url) caps_today.push(new Capitulo(base_url + url, name));
+            //if (url) caps_today.push(new Capitulo(base_url + url, name));
         }
 
         // Paralelizar la navegación a cada capítulo
         await Promise.all(
             caps_today.map(async (cap) => {
-                console.log("🔗 Cap::", cap.getTitle, cap.getUrl);
+                //console.log("🔗 Cap::", cap.getTitle, cap.getUrl);
                 const capPage = await page.context().newPage();
                 
                 try {
@@ -32,7 +31,7 @@ test.describe.parallel('Animeflv', () => {
                     let options = await capPage.locator("//ul[@role='tablist']/li").all();
                     for (let option of options) {
                         let originalTitle = await option.getAttribute("data-original-title") ?? await option.getAttribute("title");
-                        console.log("Option::", originalTitle);
+                        //console.log("Option::", originalTitle);
 
                         if (originalTitle === PROVIDER) {
                             let popupOpened = false;
@@ -43,7 +42,7 @@ test.describe.parallel('Animeflv', () => {
                                 ]);
 
                                 if (popup) {
-                                    console.log("❌ Popup detectado. Cerrándolo...");
+                                    //console.log("❌ Popup detectado. Cerrándolo...");
                                     await popup.close();
                                     popupOpened = true;
                                 } else {
@@ -74,6 +73,6 @@ test.describe.parallel('Animeflv', () => {
                 }
             })
         );
-        console.log("🔗 Caps:", caps_today);
+        //console.log("🔗 Caps:", caps_today);
     });
 });

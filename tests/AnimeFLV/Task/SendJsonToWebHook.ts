@@ -3,7 +3,7 @@ import * as fs from 'fs/promises';
 
 export async function SendJsonToWebHook(url_webhook: string, path_json: string, secret: string): Promise<void> {
     try {
-        console.log(url_webhook, path_json);
+        //console.log(url_webhook, path_json);
         const jsonData = await fs.readFile(path_json, 'utf-8');
         const parsedData = JSON.parse(jsonData);
 

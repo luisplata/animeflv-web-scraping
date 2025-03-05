@@ -9,6 +9,6 @@ export const generateFileWithResults = (json: Anime[], nameOfFile: string): stri
     }
     const path = join(resultsDir, `results_${nameOfFile}.json`);
     writeFileSync(path, JSON.stringify(json, null, 2));
-    console.log("File generated at:", path);
+    //console.log("File generated at:", path);
     return path;
 }

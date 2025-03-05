@@ -10,7 +10,7 @@ export const getProvider = () => async (cap: Episode, page: SpecificCap) => {
             continue;
         }
         let videoSource = await page.getLinkToView(option);
-        console.log("🔗 Cap to get provider::", cap.title, cap.number, titleOption, videoSource);
+        //console.log("🔗 Cap to get provider::", cap.title, cap.number, titleOption, videoSource);
         let source = new Source(titleOption, videoSource);
         await cap.AddSource(source);
     }

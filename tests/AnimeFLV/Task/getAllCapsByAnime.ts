@@ -41,7 +41,7 @@ export class GetAllCapsByAnime {
                 try {
                     let capLink = await specificAnimeTask.getCapLink(cap);
                     let capNumber = await specificAnimeTask.getCapNumber(cap);
-                    console.log("🔗 Cap::", capNumber, capLink);
+                    //console.log("🔗 Cap::", capNumber, capLink);
                 } catch (e) {
                     console.log("Error::", e);
                 }

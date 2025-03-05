@@ -24,7 +24,6 @@ test('scrapping animeflv', async ({page}) => {
             const homePage = new HomePage(page, user.getPage());
             await homePage.init();
             let animates = await getAllAnimeByDayTask(user)(homePage);
-            console.log(animates);
             await Promise.all(
                 animates.map(
                     async (anime) => {
@@ -42,7 +41,6 @@ test('scrapping animeflv', async ({page}) => {
                     }
                 )
             );
-            console.log(animates);
             let pathToJson = generateFileWithResults(animates, "");
             await SendJsonToWebHook(webhook, pathToJson, secret);
         });
