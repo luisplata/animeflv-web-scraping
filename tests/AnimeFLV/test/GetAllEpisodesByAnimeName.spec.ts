@@ -74,6 +74,8 @@ test('scrapping animeflv', async ({ page }) => {
                         continue;
                     }
 
+                    console.log(`Proccesing ${anime.name}`);
+
                     await Promise.all(
                         anime.caps.map(
                             async (cap) => {
