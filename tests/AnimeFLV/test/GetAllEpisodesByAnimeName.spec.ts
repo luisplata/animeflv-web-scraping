@@ -100,7 +100,11 @@ test('scrapping animeflv', async ({ page }) => {
                 }
             } while (!animeFound);
             let pathToJson = generateFileWithResults(finalAnimeData, "test_local");
-            await SendJsonToWebHook(webhook, pathToJson, secret);
+            const headers = {
+                'X-Webhook-Token': secret,
+                'X-Webhook-Series': 'true'
+            };
+            await SendJsonToWebHook(webhook, pathToJson, headers);
         });
 });
 

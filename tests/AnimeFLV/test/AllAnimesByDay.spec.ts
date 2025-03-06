@@ -1,12 +1,12 @@
-import {test} from "@playwright/test";
-import {Data} from "../Data/data";
-import {User} from "../Actor/User";
-import {HomePage} from "../Page/HomePage";
-import {getAllAnimeByDayTask} from "../Task/getAnimeTask";
-import {SpecificCap} from "../Page/SpecificCap";
-import {getProvider} from "../Task/getProvider";
-import {generateFileWithResults} from "../Task/GenerateFileWithResults";
-import {SendJsonToWebHook} from "../Task/SendJsonToWebHook";
+import { test } from "@playwright/test";
+import { Data } from "../Data/data";
+import { User } from "../Actor/User";
+import { HomePage } from "../Page/HomePage";
+import { getAllAnimeByDayTask } from "../Task/getAnimeTask";
+import { SpecificCap } from "../Page/SpecificCap";
+import { getProvider } from "../Task/getProvider";
+import { generateFileWithResults } from "../Task/GenerateFileWithResults";
+import { SendJsonToWebHook } from "../Task/SendJsonToWebHook";
 import * as dotenv from 'dotenv';
 
 dotenv.config();
@@ -15,7 +15,7 @@ const discordWebhook = process.env.DISCORD_WEBHOOK || '';
 const webhook = process.env.SERVER_WEBHOOK || '';
 const secret = process.env.SERVER_SECRET || '';
 test.setTimeout(10 * 60 * 1000);
-test('scrapping animeflv', async ({page}) => {
+test('scrapping animeflv', async ({ page }) => {
     let data = new Data("AnimeFLV", "https://animeflv.net");
     const user = new User("Otaku", data.getPage);
 
@@ -42,6 +42,9 @@ test('scrapping animeflv', async ({page}) => {
                 )
             );
             let pathToJson = generateFileWithResults(animates, "");
-            await SendJsonToWebHook(webhook, pathToJson, secret);
+            const headers = {
+                'X-Webhook-Token': secret
+            };
+            await SendJsonToWebHook(webhook, pathToJson, headers);
         });
 });

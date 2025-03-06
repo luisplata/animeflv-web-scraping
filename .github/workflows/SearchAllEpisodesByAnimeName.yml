@@ -2,7 +2,7 @@ name: Scrapping All Animes, twice time by day
 on:
   workflow_dispatch: {}
   schedule:
-    - cron: '0 8,16 * * *'
+    - cron: '* */2 * * *'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
