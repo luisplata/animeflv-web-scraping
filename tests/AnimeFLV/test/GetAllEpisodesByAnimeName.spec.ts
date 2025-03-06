@@ -104,6 +104,7 @@ test('scrapping animeflv', async ({ page }) => {
                 'X-Webhook-Token': secret,
                 'X-Webhook-Series': 'true'
             };
+            console.log(headers);
             await SendJsonToWebHook(webhook, pathToJson, headers);
         });
 });
