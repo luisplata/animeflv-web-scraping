@@ -101,8 +101,7 @@ test('scrapping animeflv', async ({ page }) => {
             } while (!animeFound);
             let pathToJson = generateFileWithResults(finalAnimeData, "test_local");
             const headers = {
-                'X-Webhook-Token': secret,
-                'X-Webhook-Series': 'true'
+                'X-Webhook-Token': secret
             };
             await SendJsonToWebHook(webhook, pathToJson, headers);
         });
