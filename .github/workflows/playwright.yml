@@ -29,9 +29,8 @@ jobs:
           npm run daily
         env:
           CI: true
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-          SERVER_WEBHOOK: ${{ secrets.SERVER_WEBHOOK }}
           SERVER_SECRET: ${{ secrets.SERVER_SECRET }}
+          SERVER_API: ${{ secrets.SERVER_API }}
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
