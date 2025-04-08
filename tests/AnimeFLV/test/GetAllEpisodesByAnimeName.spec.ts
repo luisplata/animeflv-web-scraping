@@ -13,7 +13,11 @@ import {DirectoryOfAllAnimes} from "../Task/directoryAllAnimes";
 import {SpecificAnime} from "../Page/SpecificAnime";
 import {GetAllCapsByAnime} from "../Task/getAllCapsByAnime";
 import {Anime, Episode} from "../Data/json";
-import {GetLastPaginationFromWebHook, SendLastPaginationToWebHook} from "../Task/GetLastPaginationFromWebHook";
+import {
+    generateSlug,
+    GetLastPaginationFromWebHook,
+    SendLastPaginationToWebHook
+} from "../Task/GetLastPaginationFromWebHook";
 
 dotenv.config();
 
@@ -46,7 +50,9 @@ test('scrapping animeflv', async ({page}) => {
                         let name = await allAnimesTask.getAnimeName(animeDirectory);
                         let link = await allAnimesTask.getAnimeLink(animeDirectory);
                         let image = await allAnimesTask.getAnimeImage(animeDirectory);
-                        const slug = name.toLowerCase().replace(/ /g, "-");
+
+                        const slug = generateSlug(name);
+
                         animeData.push(new Anime(name.split(" "), slug, link, image));
                     })
                 );
