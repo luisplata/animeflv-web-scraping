@@ -9,8 +9,8 @@ export class DirectoryOfAnimes extends BasePage {
     private readonly animeImage = "//img";
     private readonly next = "//a[contains(@href,'?page') and @rel = 'next']";
 
-    constructor(page: Page, url: string) {
-        url += "/browse";
+    constructor(page: Page, url: string, pageNumber: number = 1) {
+        url += "/browse?page=" + pageNumber;
         super(page, url);
     }
 

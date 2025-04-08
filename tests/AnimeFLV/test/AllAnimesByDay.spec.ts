@@ -11,8 +11,7 @@ import * as dotenv from 'dotenv';
 
 dotenv.config();
 
-const discordWebhook = process.env.DISCORD_WEBHOOK || '';
-const webhook = process.env.SERVER_WEBHOOK || '';
+const webhook = process.env.SERVER_API || '';
 const secret = process.env.SERVER_SECRET || '';
 test.setTimeout(10 * 60 * 1000);
 test('scrapping animeflv', async ({ page }) => {
@@ -45,6 +44,6 @@ test('scrapping animeflv', async ({ page }) => {
             const headers = {
                 'X-Webhook-Token': secret
             };
-            await SendJsonToWebHook(webhook, pathToJson, headers);
+            await SendJsonToWebHook(webhook+"/webhook/send-animes-today", pathToJson, headers);
         });
 });

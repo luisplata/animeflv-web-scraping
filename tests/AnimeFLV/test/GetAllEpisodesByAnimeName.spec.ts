@@ -1,38 +1,45 @@
-import { test } from "@playwright/test";
-import { Data } from "../Data/data";
-import { User } from "../Actor/User";
-import { HomePage } from "../Page/HomePage";
-import { getAllAnimeByDayTask } from "../Task/getAnimeTask";
-import { SpecificCap } from "../Page/SpecificCap";
-import { getProvider } from "../Task/getProvider";
-import { generateFileWithResults } from "../Task/GenerateFileWithResults";
-import { SendJsonToWebHook } from "../Task/SendJsonToWebHook";
+import {test} from "@playwright/test";
+import {Data} from "../Data/data";
+import {User} from "../Actor/User";
+import {HomePage} from "../Page/HomePage";
+import {getAllAnimeByDayTask} from "../Task/getAnimeTask";
+import {SpecificCap} from "../Page/SpecificCap";
+import {getProvider} from "../Task/getProvider";
+import {generateFileWithResults} from "../Task/GenerateFileWithResults";
+import {SendJsonToWebHook} from "../Task/SendJsonToWebHook";
 import * as dotenv from 'dotenv';
-import { DirectoryOfAnimes } from "../Page/DirectoryOfAnimes";
-import { DirectoryOfAllAnimes } from "../Task/directoryAllAnimes";
-import { SpecificAnime } from "../Page/SpecificAnime";
-import { GetAllCapsByAnime } from "../Task/getAllCapsByAnime";
-import { Anime, Episode } from "../Data/json";
+import {DirectoryOfAnimes} from "../Page/DirectoryOfAnimes";
+import {DirectoryOfAllAnimes} from "../Task/directoryAllAnimes";
+import {SpecificAnime} from "../Page/SpecificAnime";
+import {GetAllCapsByAnime} from "../Task/getAllCapsByAnime";
+import {Anime, Episode} from "../Data/json";
+import {GetLastPaginationFromWebHook, SendLastPaginationToWebHook} from "../Task/GetLastPaginationFromWebHook";
 
 dotenv.config();
 
-const discordWebhook = process.env.DISCORD_WEBHOOK || '';
-const webhook = process.env.SERVER_WEBHOOK || '';
+const webhook = process.env.SERVER_API || '';
 const url_api = process.env.SERVER_API || '';
 const secret = process.env.SERVER_SECRET || '';
 test.setTimeout(10 * 60 * 1000);
-test('scrapping animeflv', async ({ page }) => {
+const headers = {
+    'X-Webhook-Token': secret
+};
+test('scrapping animeflv', async ({page}) => {
     let data = new Data("AnimeFLV", "https://animeflv.net");
     const user = new User("Otaku", data.getPage);
     await user.attemptsTo(
         async () => {
-            const directoryMap = new DirectoryOfAnimes(page, user.getPage());
+
+            let lastPage = await GetLastPaginationFromWebHook(webhook+"/webhook", 'animeflv', headers);
+            const directoryMap = new DirectoryOfAnimes(page, user.getPage(), lastPage);
             await directoryMap.init();
             let animeFound = false;
             let animeData: Anime[] = [];
             let finalAnimeData: Anime[] = [];
             //Get all animes in directory
             let allAnimesTask = new DirectoryOfAllAnimes(directoryMap);
+            lastPage++;
+            await SendLastPaginationToWebHook(webhook+"/webhook", 'anime', lastPage, headers);
             do {
                 //Guardamos todos los animes del directorio
                 let allAnimes = await allAnimesTask.getListOfAnimes();
@@ -70,7 +77,7 @@ test('scrapping animeflv', async ({ page }) => {
                     const isValid = validateEpisodes(anime, animeFromServer);
                     if (isValid) {
                         console.log(`Anime ${anime.name} has all episodes (${anime.caps.length}). Skipping...`);
-                        specificAnime.getPage.close();
+                        await specificAnime.getPage.close();
                         continue;
                     }
 
@@ -91,21 +98,10 @@ test('scrapping animeflv', async ({ page }) => {
                     finalAnimeData.push(anime);
                     break;
                 }
-                if (!animeFound) {
-                    try {
-                        await allAnimesTask.nextPage();
-                        await page.waitForTimeout(1000);
-                    } catch (e) {
-                        console.log("No more pages", e);
-                        break;
-                    }
-                }
+
             } while (!animeFound);
             let pathToJson = generateFileWithResults(finalAnimeData, "test_local");
-            const headers = {
-                'X-Webhook-Token': secret
-            };
-            await SendJsonToWebHook(webhook, pathToJson, headers);
+            await SendJsonToWebHook(webhook + "/webhook/send-anime-full", pathToJson, headers);
         });
 });
 

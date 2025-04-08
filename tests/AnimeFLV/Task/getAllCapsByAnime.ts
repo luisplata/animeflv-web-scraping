@@ -1,5 +1,6 @@
 import {SpecificAnime} from "../Page/SpecificAnime";
 import {Locator} from "@playwright/test";
+import {compareText} from "./GetLastPaginationFromWebHook";
 
 export class GetAllCapsByAnime {
     private specificAnime: SpecificAnime;
@@ -32,7 +33,8 @@ export class GetAllCapsByAnime {
 
     public async isFinished(isFinished: string): Promise<boolean> {
         let name = this.specificAnime.getPage.locator(this.specificAnime.getIsFinished).first();
-        return await name.innerText() === isFinished;
+        let isF = await name.innerText();
+        return compareText(isF, isFinished);
     }
 
     public async processCaps(caps: Locator[], startIndex: number, specificAnimeTask: GetAllCapsByAnime) {
