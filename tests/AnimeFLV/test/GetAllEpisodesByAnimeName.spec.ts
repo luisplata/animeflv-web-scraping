@@ -30,7 +30,7 @@ test('scrapping animeflv', async ({page}) => {
     await user.attemptsTo(
         async () => {
 
-            let lastPage = await GetLastPaginationFromWebHook(webhook+"/webhook", 'animeflv', headers);
+            let lastPage = await GetLastPaginationFromWebHook(webhook + "/webhook", 'animeflv', headers);
             const directoryMap = new DirectoryOfAnimes(page, user.getPage(), lastPage);
             await directoryMap.init();
             let animeFound = false;
@@ -38,8 +38,6 @@ test('scrapping animeflv', async ({page}) => {
             let finalAnimeData: Anime[] = [];
             //Get all animes in directory
             let allAnimesTask = new DirectoryOfAllAnimes(directoryMap);
-            lastPage++;
-            await SendLastPaginationToWebHook(webhook+"/webhook", 'anime', lastPage, headers);
             do {
                 //Guardamos todos los animes del directorio
                 let allAnimes = await allAnimesTask.getListOfAnimes();
@@ -61,7 +59,7 @@ test('scrapping animeflv', async ({page}) => {
                     let animeName = await specificAnimeTask.getTitleOfAnime();
                     let caps = await specificAnimeTask.getListOfCaps();
 
-                    await Promise.all(caps.slice(await specificAnimeTask.isFinished("Finalizado") ? 0 : 1).map(async (cap) => {
+                    await Promise.all(caps.slice(await specificAnimeTask.isFinished("FINALIZADO") ? 0 : 1).map(async (cap) => {
                         try {
                             let capLink = await specificAnimeTask.getCapLink(cap);
                             let capNumber = await specificAnimeTask.getCapNumber(cap);
@@ -97,6 +95,17 @@ test('scrapping animeflv', async ({page}) => {
                     animeFound = true;
                     finalAnimeData.push(anime);
                     break;
+                }
+                if (!animeFound) {
+                    try {
+                        await allAnimesTask.nextPage();
+                        await page.waitForTimeout(1000);
+                        lastPage++;
+                        await SendLastPaginationToWebHook(webhook + "/webhook", 'anime', lastPage, headers);
+                    } catch (e) {
+                        console.log("No more pages", e);
+                        break;
+                    }
                 }
 
             } while (!animeFound);
