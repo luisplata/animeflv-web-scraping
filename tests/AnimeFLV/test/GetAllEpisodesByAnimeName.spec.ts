@@ -107,7 +107,7 @@ test('scrapping animeflv', async ({page}) => {
                         await allAnimesTask.nextPage();
                         await page.waitForTimeout(1000);
                         lastPage++;
-                        await SendLastPaginationToWebHook(webhook + "/webhook", 'anime', lastPage, headers);
+                        await SendLastPaginationToWebHook(webhook + "/webhook", 'animeflv', lastPage, headers);
                     } catch (e) {
                         console.log("No more pages", e);
                         break;
