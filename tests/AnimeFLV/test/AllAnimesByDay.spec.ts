@@ -34,12 +34,14 @@ test('scrapping animeflv', async ({ page }) => {
                                     await specificCap.init();
                                     await specificCap.getPage.waitForTimeout(2000);
                                     await getProvider()(cap, specificCap);
+                                    await specificCap.getPage.close();
                                 }
                             )
                         );
                     }
                 )
             );
+            homePage.getPage.close();
             let pathToJson = generateFileWithResults(animates, "");
             const headers = {
                 'X-Webhook-Token': secret
