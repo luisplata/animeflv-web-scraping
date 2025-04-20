@@ -94,10 +94,11 @@ test('scrapping animeflv', async ({page}) => {
                                 await specificCap.init();
                                 await specificCap.getPage.waitForTimeout(2000);
                                 await getProvider()(cap, specificCap);
+                                await specificCap.getPage.close();
                             }
                         )
                     );
-
+                    await specificAnime.getPage.close();
                     animeFound = true;
                     finalAnimeData.push(anime);
                     break;
@@ -115,6 +116,7 @@ test('scrapping animeflv', async ({page}) => {
                 }
 
             } while (!animeFound);
+            directoryMap.getPage.close();
             let pathToJson = generateFileWithResults(finalAnimeData, "test_local");
             await SendJsonToWebHook(webhook + "/webhook/send-anime-full", pathToJson, headers);
         });
