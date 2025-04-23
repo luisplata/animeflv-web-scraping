@@ -24,7 +24,7 @@ export class SpecificCap extends BasePage {
             ]);
 
             if (popup) {
-                //console.log("❌ Popup detectado. Cerrándolo...");
+                console.log("❌ Popup detectado. Cerrándolo...");
                 await popup.close();
                 popupOpened = true;
             } else {
@@ -40,7 +40,7 @@ export class SpecificCap extends BasePage {
         let mega = await this.page.locator(this.linkToViewCap).first();
         if (mega) {
             let src = await mega.getAttribute("src");
-            //console.log("✅ video found!::", src);
+            console.log("✅ video found!::", src);
             if (src) {
                 return src;
             }
