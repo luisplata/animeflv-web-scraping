@@ -9,7 +9,7 @@ export const getProvider = () => async (cap: Episode, page: SpecificCap) => {
         if (unsupport.some(name => titleOption.toLowerCase().includes(name.toLowerCase()))) {
             continue;
         }
-        console.log("🔗 Cap provider::", option);
+        console.log("🔗 Cap provider::", option.innerText);
         let videoSource = await page.getLinkToView(option);
         console.log("🔗 Cap to get provider::", cap.title, cap.number, titleOption, videoSource);
         let source = new Source(titleOption, videoSource);
