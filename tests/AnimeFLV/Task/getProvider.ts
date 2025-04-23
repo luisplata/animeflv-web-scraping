@@ -7,7 +7,7 @@ export const getProvider = () => async (cap: Episode, page: SpecificCap) => {
     for (let option of capPage) {
         let titleOption = await page.getTitleOfOption(option);
         //log the option text from Locator
-        console.log("🔗 Cap provider::", await option.textContent(), cap.number);
+        console.log("🔗 Cap provider::", await option.textContent(), titleOption, cap.number);
         if (unsupport.some(name => titleOption.toLowerCase().includes(name.toLowerCase()))) {
             continue;
         }
