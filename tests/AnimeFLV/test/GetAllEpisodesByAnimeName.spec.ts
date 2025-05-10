@@ -56,17 +56,17 @@ test('scrapping animeflv', async ({ page }) => {
                         animeData.push(new Anime(name.split(" "), slug, link, image));
                     })
                 );
-                let notFound = false;
 
                 //new version!
                 for (const anime of animeData) {
+                    let notFound = false;
                     let specificAnime = new SpecificAnime(await directoryMap.getPage.context().newPage(), data.getPage + anime.description);
                     await specificAnime.init();
                     const is404 = await specificAnime.getPage.locator('.Page404').count();
                     if (is404 > 0) {
                         console.log(`Página 404 detectada en: ${data.getPage + anime.description}`);
+                        console.log(`Anime ${anime.name} not found. Skipping...`);
                         await specificAnime.getPage.close();
-                        notFound = true;
                         continue;
                     }
                     let specificAnimeTask = new GetAllCapsByAnime(specificAnime);
@@ -106,10 +106,6 @@ test('scrapping animeflv', async ({ page }) => {
                             }
                         )
                     );
-                    if (notFound) {
-                        console.log(`Anime ${anime.name} not found. Skipping...`);
-                        continue;
-                    }
                     await specificAnime.getPage.close();
                     animeFound = true;
                     finalAnimeData.push(anime);
