@@ -1,18 +1,18 @@
-import {test} from "@playwright/test";
-import {Data} from "../Data/data";
-import {User} from "../Actor/User";
-import {HomePage} from "../Page/HomePage";
-import {getAllAnimeByDayTask} from "../Task/getAnimeTask";
-import {SpecificCap} from "../Page/SpecificCap";
-import {getProvider} from "../Task/getProvider";
-import {generateFileWithResults} from "../Task/GenerateFileWithResults";
-import {SendJsonToWebHook} from "../Task/SendJsonToWebHook";
+import { test } from "@playwright/test";
+import { Data } from "../Data/data";
+import { User } from "../Actor/User";
+import { HomePage } from "../Page/HomePage";
+import { getAllAnimeByDayTask } from "../Task/getAnimeTask";
+import { SpecificCap } from "../Page/SpecificCap";
+import { getProvider } from "../Task/getProvider";
+import { generateFileWithResults } from "../Task/GenerateFileWithResults";
+import { SendJsonToWebHook } from "../Task/SendJsonToWebHook";
 import * as dotenv from 'dotenv';
-import {DirectoryOfAnimes} from "../Page/DirectoryOfAnimes";
-import {DirectoryOfAllAnimes} from "../Task/directoryAllAnimes";
-import {SpecificAnime} from "../Page/SpecificAnime";
-import {GetAllCapsByAnime} from "../Task/getAllCapsByAnime";
-import {Anime, Episode} from "../Data/json";
+import { DirectoryOfAnimes } from "../Page/DirectoryOfAnimes";
+import { DirectoryOfAllAnimes } from "../Task/directoryAllAnimes";
+import { SpecificAnime } from "../Page/SpecificAnime";
+import { GetAllCapsByAnime } from "../Task/getAllCapsByAnime";
+import { Anime, Episode } from "../Data/json";
 import {
     generateSlug,
     GetLastPaginationFromWebHook,
@@ -28,7 +28,7 @@ test.setTimeout(10 * 60 * 1000);
 const headers = {
     'X-Webhook-Token': secret
 };
-test('scrapping animeflv', async ({page}) => {
+test('scrapping animeflv', async ({ page }) => {
     let data = new Data("AnimeFLV", "https://animeflv.net");
     const user = new User("Otaku", data.getPage);
     await user.attemptsTo(
@@ -56,11 +56,19 @@ test('scrapping animeflv', async ({page}) => {
                         animeData.push(new Anime(name.split(" "), slug, link, image));
                     })
                 );
+                let notFound = false;
 
                 //new version!
                 for (const anime of animeData) {
                     let specificAnime = new SpecificAnime(await directoryMap.getPage.context().newPage(), data.getPage + anime.description);
                     await specificAnime.init();
+                    const is404 = await specificAnime.getPage.locator('.Page404').count();
+                    if (is404 > 0) {
+                        console.log(`Página 404 detectada en: ${data.getPage + anime.description}`);
+                        await specificAnime.getPage.close();
+                        notFound = true;
+                        continue;
+                    }
                     let specificAnimeTask = new GetAllCapsByAnime(specificAnime);
                     let animeName = await specificAnimeTask.getTitleOfAnime();
                     let caps = await specificAnimeTask.getListOfCaps();
@@ -98,6 +106,10 @@ test('scrapping animeflv', async ({page}) => {
                             }
                         )
                     );
+                    if (notFound) {
+                        console.log(`Anime ${anime.name} not found. Skipping...`);
+                        continue;
+                    }
                     await specificAnime.getPage.close();
                     animeFound = true;
                     finalAnimeData.push(anime);
