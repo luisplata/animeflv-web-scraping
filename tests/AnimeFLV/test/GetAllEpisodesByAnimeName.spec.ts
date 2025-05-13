@@ -194,8 +194,9 @@ async function proccessDataToAnimeDetail(url: string): Promise<AnimeDetail> {
 }
 
 function validateEpisodes(animeData: Anime, animeFromServer: AnimeDetail): boolean {
-    const animeDataEpisodes = animeData.caps.map(ep => ep.number);
-    const serverEpisodes = animeFromServer.episodes.map(ep => ep.number);
+    // Convertimos ambos arrays a string para comparar correctamente
+    const animeDataEpisodes = animeData.caps.map(ep => String(ep.number));
+    const serverEpisodes = animeFromServer.episodes.map(ep => String(ep.number));
 
     console.log("AnimeDataEpisodes: ", animeDataEpisodes);
     console.log("ServerEpisodes: ", serverEpisodes);
