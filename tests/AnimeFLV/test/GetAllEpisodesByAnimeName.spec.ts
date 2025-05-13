@@ -163,6 +163,7 @@ interface AnimeDetail {
 
 async function proccessDataToAnimeDetail(url: string): Promise<AnimeDetail> {
     try {
+        console.log("Serach server: "+url);
         const response = await fetch(url);
 
         if (response.status === 404) {
