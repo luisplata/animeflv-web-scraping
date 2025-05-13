@@ -197,6 +197,14 @@ function validateEpisodes(animeData: Anime, animeFromServer: AnimeDetail): boole
     const animeDataEpisodes = animeData.caps.map(ep => ep.number);
     const serverEpisodes = animeFromServer.episodes.map(ep => ep.number);
 
+    console.log("AnimeDataEpisodes: ", animeDataEpisodes);
+    console.log("ServerEpisodes: ", serverEpisodes);
+
     // Check if every episode in animeData is present in animeFromServer
-    return animeDataEpisodes.every(ep => serverEpisodes.includes(ep));
+    const result = animeDataEpisodes.every(ep => serverEpisodes.includes(ep));
+    if (!result) {
+        const missing = animeDataEpisodes.filter(ep => !serverEpisodes.includes(ep));
+        console.warn('Missing episodes in server:', missing);
+    }
+    return result;
 }
