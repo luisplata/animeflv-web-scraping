@@ -1,11 +1,11 @@
-import {BasePage} from "../../../Page/BasePage";
-import {Locator} from '@playwright/test';
+import { BasePage } from "../../../Page/BasePage";
+import { Locator } from '@playwright/test';
 
 export class SpecificCap extends BasePage {
     private readonly listOfOptions = "//ul[@role='tablist']/li";
     private readonly titleOfOption = "data-original-title";
     private readonly titleOfOptionAlt = "title";
-    private readonly linkToViewCap = "//div[@id='video_box']/iframe";
+    private readonly linkToViewCap = "//div[@id='video_box']";
 
     public async getListOfOptions(): Promise<Locator[]> {
         return await this.page.locator(this.listOfOptions).all();
@@ -19,7 +19,7 @@ export class SpecificCap extends BasePage {
         let popupOpened = false;
         do {
             const [popup] = await Promise.all([
-                this.page.waitForEvent('popup', {timeout: 4000}).catch(() => null),
+                this.page.waitForEvent('popup', { timeout: 4000 }).catch(() => null),
                 option.click(),
             ]);
 
@@ -37,15 +37,23 @@ export class SpecificCap extends BasePage {
 
         } while (popupOpened);
 
-        let mega = await this.page.locator(this.linkToViewCap).first();
-        if (mega) {
-            let src = await mega.getAttribute("src");
-            console.log("✅ video found!::", src);
-            if (src) {
-                return src;
-            }
+        // Buscar el div primero
+        const videoBox = this.page.locator(this.linkToViewCap);
+        if (await videoBox.count() === 0) {
+            console.log("⚠️ video_box div not found.");
+            return '';
         }
-        return '';
+
+        // Buscar el iframe dentro del div
+        const iframe = videoBox.locator("iframe");
+        if (await iframe.count() === 0) {
+            console.log("⚠️ iframe not found inside video_box.");
+            return '';
+        }
+
+        const src = await iframe.first().getAttribute("src");
+        console.log("✅ video found!::", src);
+        return src ?? '';
     }
 
 }
