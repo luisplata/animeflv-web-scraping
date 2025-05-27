@@ -57,8 +57,10 @@ test('scrapping animeflv', async ({ page }) => {
             do {
                 //Guardamos todos los animes del directorio
                 let allAnimes = await allAnimesTask.getListOfAnimes();
-                await Promise.all(
-                    allAnimes.map(async (animeDirectory) => {
+                await processInChunks(
+                    allAnimes,
+                    10,
+                    async (animeDirectory) => {
                         let name = await allAnimesTask.getAnimeName(animeDirectory);
                         let link = await allAnimesTask.getAnimeLink(animeDirectory);
                         let image = await allAnimesTask.getAnimeImage(animeDirectory);
@@ -66,7 +68,7 @@ test('scrapping animeflv', async ({ page }) => {
                         const slug = generateSlug(name);
 
                         animeData.push(new Anime(name.split(" "), slug, link, image));
-                    })
+                    }
                 );
 
                 //new version!
@@ -87,7 +89,7 @@ test('scrapping animeflv', async ({ page }) => {
 
                     await processInChunks(
                         caps.slice(await specificAnimeTask.isFinished("FINALIZADO") ? 0 : 1),
-                        12,
+                        5,
                         async (cap) => {
                             try {
                                 let capLink = await specificAnimeTask.getCapLink(cap);
@@ -110,16 +112,16 @@ test('scrapping animeflv', async ({ page }) => {
 
                     console.log(`Proccesing ${anime.name}`);
 
-                    await Promise.all(
-                        anime.caps.map(
-                            async (cap) => {
-                                const specificCap = new SpecificCap(await page.context().newPage(), data.getPage + cap.link);
-                                await specificCap.init();
-                                await specificCap.getPage.waitForTimeout(2000);
-                                await getProvider()(cap, specificCap);
-                                await specificCap.getPage.close();
-                            }
-                        )
+                    await processInChunks(
+                        anime.caps,
+                        5,
+                        async (cap) => {
+                            const specificCap = new SpecificCap(await page.context().newPage(), data.getPage + cap.link);
+                            await specificCap.init();
+                            await specificCap.getPage.waitForTimeout(2000);
+                            await getProvider()(cap, specificCap);
+                            await specificCap.getPage.close();
+                        }
                     );
                     await specificAnime.getPage.close();
                     animeFound = true;
