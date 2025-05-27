@@ -28,6 +28,18 @@ test.setTimeout(10 * 60 * 1000);
 const headers = {
     'X-Webhook-Token': secret
 };
+
+async function processInChunks<T>(
+    items: T[],
+    chunkSize: number,
+    callback: (item: T, index: number) => Promise<void>
+) {
+    for (let i = 0; i < items.length; i += chunkSize) {
+        const chunk = items.slice(i, i + chunkSize);
+        await Promise.all(chunk.map((item, idx) => callback(item, i + idx)));
+    }
+}
+
 test('scrapping animeflv', async ({ page }) => {
     let data = new Data("AnimeFLV", "https://animeflv.net");
     const user = new User("Otaku", data.getPage);
@@ -73,17 +85,20 @@ test('scrapping animeflv', async ({ page }) => {
                     let animeName = await specificAnimeTask.getTitleOfAnime();
                     let caps = await specificAnimeTask.getListOfCaps();
 
-                    await Promise.all(caps.slice(await specificAnimeTask.isFinished("FINALIZADO") ? 0 : 1).map(async (cap) => {
-                        try {
-                            let capLink = await specificAnimeTask.getCapLink(cap);
-                            let capNumber = await specificAnimeTask.getCapNumber(cap);
-                            //parseInt(text.replace(/\D/g, ""), 10);
-                            let capi = new Episode(animeName, parseInt(capNumber.replace(/\D/g, ""), 10), capLink);
-                            anime.caps.push(capi);
-                        } catch (e) {
-                            console.log("Error::", e);
+                    await processInChunks(
+                        caps.slice(await specificAnimeTask.isFinished("FINALIZADO") ? 0 : 1),
+                        12,
+                        async (cap) => {
+                            try {
+                                let capLink = await specificAnimeTask.getCapLink(cap);
+                                let capNumber = await specificAnimeTask.getCapNumber(cap);
+                                let capi = new Episode(animeName, parseInt(capNumber.replace(/\D/g, ""), 10), capLink);
+                                anime.caps.push(capi);
+                            } catch (e) {
+                                console.log("Error::", e);
+                            }
                         }
-                    }));
+                    );
 
                     let animeFromServer = await proccessDataToAnimeDetail(url_api + "/anime/" + anime.slug);
                     const isValid = validateEpisodes(anime, animeFromServer);
@@ -163,7 +178,7 @@ interface AnimeDetail {
 
 async function proccessDataToAnimeDetail(url: string): Promise<AnimeDetail> {
     try {
-        console.log("Serach server: "+url);
+        console.log("Serach server: " + url);
         const response = await fetch(url);
 
         if (response.status === 404) {
