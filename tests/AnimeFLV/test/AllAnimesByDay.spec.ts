@@ -40,13 +40,17 @@ test('scrapping animeflv', async ({ page }) => {
                 async (anime) => {
                     await processInChunks(
                         anime.caps,
-                        5, // Procesa 5 caps a la vez por anime
+                        5,
                         async (cap) => {
-                            const specificCap = new SpecificCap(await page.context().newPage(), data.getPage + cap.link);
-                            await specificCap.init();
-                            await specificCap.getPage.waitForTimeout(2000);
-                            await getProvider()(cap, specificCap);
-                            await specificCap.getPage.close();
+                            try {
+                                const specificCap = new SpecificCap(await page.context().newPage(), data.getPage + cap.link);
+                                await specificCap.init();
+                                await specificCap.getPage.waitForTimeout(2000);
+                                await getProvider()(cap, specificCap);
+                                await specificCap.getPage.close();
+                            } catch (err) {
+                                console.error(`Error procesando cap ${cap.number} de ${anime.slug}:`, err);
+                            }
                         }
                     );
                 }
