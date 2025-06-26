@@ -18,6 +18,7 @@ import {
     GetLastPaginationFromWebHook,
     SendLastPaginationToWebHook
 } from "../Task/GetLastPaginationFromWebHook";
+import { GetMetadata } from "../Task/getMetaData";
 
 dotenv.config();
 
@@ -76,6 +77,7 @@ test('scrapping animeflv', async ({ page }) => {
                     let notFound = false;
                     let specificAnime = new SpecificAnime(await directoryMap.getPage.context().newPage(), data.getPage + anime.description);
                     await specificAnime.init();
+
                     const is404 = await specificAnime.getPage.locator('.Page404').count();
                     if (is404 > 0) {
                         console.log(`Página 404 detectada en: ${data.getPage + anime.description}`);
@@ -83,6 +85,26 @@ test('scrapping animeflv', async ({ page }) => {
                         await specificAnime.getPage.close();
                         continue;
                     }
+
+                    const alterNames = await GetMetadata.getAlterNames(specificAnime);
+                    if (alterNames.length > 0) {
+                        //alternames is a list of names
+                        console.log(`Alter names found for ${anime.name}:`, alterNames);
+                        anime.alterNames = alterNames;
+                    }
+
+                    let description = await GetMetadata.getDescription(specificAnime);
+                    if (description) {
+                        console.log(`Description found for ${anime.name}:`, description);
+                        anime.description = description;
+                    }
+
+                    let genere = await GetMetadata.getGenere(specificAnime);
+                    if (genere.length > 0) {
+                        console.log(`Genres found for ${anime.name}:`, genere);
+                        anime.genres = genere;
+                    }
+
                     let specificAnimeTask = new GetAllCapsByAnime(specificAnime);
                     let animeName = await specificAnimeTask.getTitleOfAnime();
                     let caps = await specificAnimeTask.getListOfCaps();

@@ -24,7 +24,7 @@ async function processInChunks<T>(
 
 const webhook = process.env.SERVER_API || '';
 const secret = process.env.SERVER_SECRET || '';
-test.setTimeout(10 * 60 * 1000);
+test.setTimeout(20 * 60 * 1000);
 test('scrapping animeflv', async ({ page }) => {
     let data = new Data("AnimeFLV", "https://animeflv.net");
     const user = new User("Otaku", data.getPage);

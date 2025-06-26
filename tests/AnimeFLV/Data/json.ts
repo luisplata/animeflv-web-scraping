@@ -4,6 +4,8 @@ export class Anime {
     description: string;
     image: string;
     caps: Episode[];
+    alterNames: string[];
+    genres: string[];
 
     constructor(name: string[], slug: string, description: string, image: string) {
         this.name = name;

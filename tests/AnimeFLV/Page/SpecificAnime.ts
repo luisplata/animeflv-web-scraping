@@ -7,6 +7,9 @@ export class SpecificAnime extends BasePage {
     private readonly animeCap = "//a";
     private readonly animeCapNumber = "//p";
     private readonly isFinished = "//aside[contains(@class,'SidebarA')]//span[@class='fa-tv']";
+    private readonly alterNames = "//span[@class='TxtAlt']";
+    private readonly genere = "//nav[@class='Nvgnrs']/a";
+    private readonly description = "//div[@class='Description']/p";
 
     public get getPath(): string {
         return this.url;
@@ -30,6 +33,18 @@ export class SpecificAnime extends BasePage {
 
     public get getIsFinished(): string {
         return this.isFinished;
+    }
+
+    public get getAlterNames(): string {
+        return this.alterNames;
+    }
+
+    public get getGenere(): string {
+        return this.genere;
+    }
+
+    public get getDescription(): string {
+        return this.description;
     }
 
 }
