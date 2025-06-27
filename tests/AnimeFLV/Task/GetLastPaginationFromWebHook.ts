@@ -58,11 +58,13 @@ export function compareText(a, b) {
     return (a ?? '').trim().toLowerCase() === (b ?? '').trim().toLowerCase();
 }
 
-export function generateSlug(text) {
+export function generateSlug(text: string) {
     return text
         .toLowerCase()
-        .normalize('NFD') // eliminar tildes y caracteres raros
-        .replace(/[\u0300-\u036f]/g, '') // eliminar restos de tildes
-        .replace(/[^a-z0-9]+/g, '-') // todo lo que no sea letra o numero -> guion
-        .replace(/^-+|-+$/g, ''); // quitar guiones al principio o final
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '') // eliminar tildes
+        .replace(/,/g, '')               // quitar comas explícitamente (antes)
+        .replace(/[^a-z0-9]+/g, '-')     // todo lo que no sea letra o número -> guion
+        .replace(/-+/g, '-')             // reemplaza múltiples guiones por uno solo
+        .replace(/^-+|-+$/g, '');        // quitar guiones al principio o final
 }

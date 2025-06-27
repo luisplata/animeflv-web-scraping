@@ -1,0 +1,10 @@
+version: '3.8'
+
+services:
+  animeflv-scrapper:
+    build: .
+    volumes:
+      - .:/app
+    environment:
+      - NODE_ENV=production
+    # Puedes agregar tus variables de entorno aquí si las necesitas
