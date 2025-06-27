@@ -13,6 +13,8 @@ export class Anime {
         this.description = description;
         this.image = image;
         this.caps = [];
+        this.alterNames = [];
+        this.genres = [];
     }
 
     AddCap(cap: Episode) {
