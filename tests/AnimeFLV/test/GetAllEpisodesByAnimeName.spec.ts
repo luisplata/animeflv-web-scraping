@@ -89,19 +89,19 @@ test('scrapping animeflv', async ({ page }) => {
                     const alterNames = await GetMetadata.getAlterNames(specificAnime);
                     if (alterNames.length > 0) {
                         //alternames is a list of names
-                        console.log(`Alter names found for ${anime.name}:`, alterNames);
+                        //console.log(`Alter names found for ${anime.name}:`, alterNames);
                         anime.alterNames = alterNames;
                     }
 
                     let description = await GetMetadata.getDescription(specificAnime);
                     if (description) {
-                        console.log(`Description found for ${anime.name}:`, description);
+                        //console.log(`Description found for ${anime.name}:`, description);
                         anime.description = description;
                     }
 
                     let genere = await GetMetadata.getGenere(specificAnime);
                     if (genere.length > 0) {
-                        console.log(`Genres found for ${anime.name}:`, genere);
+                        //console.log(`Genres found for ${anime.name}:`, genere);
                         anime.genres = genere;
                     }
 

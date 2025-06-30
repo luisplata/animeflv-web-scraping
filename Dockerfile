@@ -18,4 +18,4 @@ COPY crontab /etc/cron.d/animeflv-cron
 RUN chmod 0644 /etc/cron.d/animeflv-cron && crontab /etc/cron.d/animeflv-cron
 
 # Inicia cron en primer plano
-CMD ["cron", "-f"]
+CMD ["bash", "-c", "while true; do /app/run-tests.sh; sleep 600; done"]

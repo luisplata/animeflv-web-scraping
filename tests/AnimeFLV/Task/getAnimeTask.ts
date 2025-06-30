@@ -25,7 +25,7 @@ export const getAllAnimeByDayTask = (user: User) => {
 
                 // Validación: ¿Ya existe el anime y el cap en el backend?
                 let url = `${webhook}/animes/search?q=${slug}`;
-                console.log(`Consultando el backend para el anime: ${url}`);
+                //console.log(`Consultando el backend para el anime: ${url}`);
                 const response = await fetch(url);
                 if (!response.ok) {
                     console.error(`Error al consultar el anime ${slug} en el backend:`, response.statusText);
@@ -38,7 +38,7 @@ export const getAllAnimeByDayTask = (user: User) => {
                     // El anime existe, revisamos los caps
                     const backendSlug = animeData.data[0].slug;
                     let allAnime = `${webhook}/anime/${backendSlug}`;
-                    console.log(`Consultando el backend para los caps del anime: ${allAnime}`);
+                    //console.log(`Consultando el backend para los caps del anime: ${allAnime}`);
                     const capResponse = await fetch(allAnime);
                     if (!capResponse.ok) {
                         console.error(`Error al consultar el cap ${capNum} del anime ${backendSlug} en el backend:`, capResponse.statusText);

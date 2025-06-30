@@ -58,6 +58,11 @@ test('scrap anime without genres from backend, update backend with genres', asyn
         }
     }
 
+    // Si no hay géneros, agrega "AnimeBell"
+    if (genres.length === 0) {
+        genres.push("AnimeBell");
+    }
+
     const payload = {
         id: anime.id,
         genres: genres
