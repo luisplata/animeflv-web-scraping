@@ -24,7 +24,7 @@ export const getAllAnimeByDayTask = (user: User) => {
                 const slug = generateSlug(title);
 
                 // Validación: ¿Ya existe el anime y el cap en el backend?
-                let url = `${webhook}/animes/search?q=${slug}`;
+                let url = `${webhook}/animes/search_specific?q=${slug}`;
                 //console.log(`Consultando el backend para el anime: ${url}`);
                 const response = await fetch(url);
                 if (!response.ok) {
