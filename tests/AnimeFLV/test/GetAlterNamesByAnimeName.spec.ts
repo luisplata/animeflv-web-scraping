@@ -23,7 +23,7 @@ interface AnimeFromBackend {
 }
 
 test('scrap anime without alter_names from backend, update backend with alter_names', async ({ page }) => {
-    const response = await fetch('https://backend.animebell.peryloth.com/api/animes/without-alternames');
+    const response = await fetch(`${webhook}/animes/without-alternames`);
     if (!response.ok) {
         console.error(`No se pudo obtener el anime: ${response.status}`);
         return;

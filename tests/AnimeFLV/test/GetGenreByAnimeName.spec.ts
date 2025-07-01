@@ -23,7 +23,7 @@ interface AnimeFromBackend {
 }
 
 test('scrap anime without genres from backend, update backend with genres', async ({ page }) => {
-    const response = await fetch('https://backend.animebell.peryloth.com/api/animes/without-genres');
+    const response = await fetch(`${webhook}/animes/without-genres`);
     if (!response.ok) {
         console.error(`No se pudo obtener el anime: ${response.status}`);
         return;
