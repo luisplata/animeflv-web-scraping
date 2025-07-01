@@ -14,4 +14,4 @@ RUN apt-get update && apt-get install -y cron
 RUN chmod +x /app/run-tests.sh
 
 # Inicia cron en primer plano
-CMD ["bash", "-c", "while true; do /app/run-tests.sh; sleep 600; done"]
+CMD ["bash", "-c", "while true; do /app/run-tests.sh; done"]

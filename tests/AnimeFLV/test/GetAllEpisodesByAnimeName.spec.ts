@@ -25,6 +25,9 @@ dotenv.config();
 const webhook = process.env.SERVER_API || '';
 const url_api = process.env.SERVER_API || '';
 const secret = process.env.SERVER_SECRET || '';
+const MAX_PAGES = Number(process.env.ANIMEFLV_MAX_PAGES) || 150;
+const MAX_CYCLES = Number(process.env.ANIMEFLV_MAX_CYCLES) || 3;
+
 test.setTimeout(10 * 60 * 1000);
 const headers = {
     'X-Webhook-Token': secret
@@ -55,6 +58,7 @@ test('scrapping animeflv', async ({ page }) => {
             let finalAnimeData: Anime[] = [];
             //Get all animes in directory
             let allAnimesTask = new DirectoryOfAllAnimes(directoryMap);
+            let cycleCount = 0
             do {
                 //Guardamos todos los animes del directorio
                 let allAnimes = await allAnimesTask.getListOfAnimes();
@@ -155,7 +159,19 @@ test('scrapping animeflv', async ({ page }) => {
                         await allAnimesTask.nextPage();
                         await page.waitForTimeout(1000);
                         lastPage++;
+
+                        if (lastPage > MAX_PAGES) {
+                            console.warn(`Se alcanzó el máximo de páginas (${MAX_PAGES}). Reiniciando a 1.`);
+                            lastPage = 1;
+                        }
+
                         await SendLastPaginationToWebHook(webhook + "/webhook", 'animeflv', lastPage, headers);
+                        
+                        cycleCount++;
+                        if (cycleCount >= MAX_CYCLES) {
+                            console.warn(`Se alcanzó el máximo de ciclos (${MAX_CYCLES}) en esta ejecución.`);
+                            break;
+                        }
                     } catch (e) {
                         console.log("No more pages", e);
                         break;

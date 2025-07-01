@@ -34,6 +34,11 @@ export const getAllAnimeByDayTask = (user: User) => {
                 const animeData = await response.json();
                 if (!animeData || !animeData.data || animeData.data.length === 0) {
                     // El anime no existe, lo procesamos normalmente
+                    // Si llegamos aquí, el cap no existe y lo agregamos
+                    let anime = new Anime(title.split(" "), slug, "", user.getPage() + image);
+                    let cap = new Episode(title, capNum, link);
+                    anime.AddCap(cap);
+                    animates.push(anime);
                 } else {
                     // El anime existe, revisamos los caps
                     const backendSlug = animeData.data[0].slug;
@@ -52,12 +57,6 @@ export const getAllAnimeByDayTask = (user: User) => {
                         continue;
                     }
                 }
-
-                // Si llegamos aquí, el cap no existe y lo agregamos
-                let anime = new Anime(title.split(" "), slug, "", user.getPage() + image);
-                let cap = new Episode(title, capNum, link);
-                anime.AddCap(cap);
-                animates.push(anime);
             } catch (error) {
                 console.warn("Error processing animeOfDay:", error);
                 continue;
