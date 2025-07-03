@@ -58,6 +58,11 @@ test('scrap anime without alter_names from backend, update backend with alter_na
         }
     }
 
+    if (alter_names.length === 0) {
+        //add default alter name
+        alter_names.push("AnimeBell");
+    }
+
     const payload = {
         id: anime.id,
         alter_names

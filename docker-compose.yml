@@ -1,10 +1,26 @@
 version: '3.8'
 
 services:
-  animeflv-scrapper:
+  animeflv-scrapper-episodes:
     build: .
-    volumes:
-      - .:/app
     environment:
       - NODE_ENV=production
-    # Puedes agregar tus variables de entorno aquí si las necesitas
+    command: bash -c "while true; do npm run test -- tests/AnimeFLV/test/GetAllEpisodesByAnimeName.spec.ts >> /app/cron_GetAllEpisodesByAnimeName.log 2>&1; done"
+
+  animeflv-scrapper-byday:
+    build: .
+    environment:
+      - NODE_ENV=production
+    command: bash -c "while true; do npm run test -- tests/AnimeFLV/test/AllAnimesByDay.spec.ts >> /app/cron_AllAnimesByDay.log 2>&1; done"
+
+  animeflv-scrapper-genres:
+    build: .
+    environment:
+      - NODE_ENV=production
+    command: bash -c "while true; do npm run test -- tests/AnimeFLV/test/GetGenreByAnimeName.spec.ts >> /app/cron_GetGenreByAnimeName.log 2>&1; done"
+
+  animeflv-scrapper-anime:
+    build: .
+    environment:
+      - NODE_ENV=production
+    command: bash -c "while true; do npm run test -- tests/AnimeFLV/test/GetAlterNamesByAnimeName.spec.ts >> /app/cron_GetAlterNamesByAnimeName.log 2>&1; done"
