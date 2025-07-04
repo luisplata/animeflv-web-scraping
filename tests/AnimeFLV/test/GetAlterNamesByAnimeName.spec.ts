@@ -23,6 +23,10 @@ interface AnimeFromBackend {
 }
 
 test('scrap anime without alter_names from backend, update backend with alter_names', async ({ page }) => {
+    const alter_names: string[] = [];
+    const fs = await import('fs/promises');
+    const path = `results/anime-alter-names.json`;
+
     const response = await fetch(`${webhook}/animes/without-alternames`);
     if (!response.ok) {
         console.error(`No se pudo obtener el anime: ${response.status}`);
@@ -36,6 +40,23 @@ test('scrap anime without alter_names from backend, update backend with alter_na
     const firstResultLink = page.locator("//ul[contains(@class,'ListAnimes')]/li[1]//a");
     if (await firstResultLink.count() === 0) {
         console.error(`No se encontró resultado para "${anime.title}"`);
+        
+        alter_names.push("AnimeBell");
+        const payload = {
+            id: anime.id,
+            alter_names
+        };
+        await fs.writeFile(path, JSON.stringify(payload, null, 2), 'utf-8');
+
+        if (!webhook || !secret) {
+            console.error("SERVER_API o SERVER_SECRET no están definidos en el entorno.");
+            return;
+        }
+        await SendJsonToWebHook(
+            webhook + "/webhook/update-anime-alternames",
+            path,
+            headers
+        );
         return;
     }
     const animeHref = await firstResultLink.first().getAttribute("href");
@@ -49,7 +70,6 @@ test('scrap anime without alter_names from backend, update backend with alter_na
 
     const specificAnime = new SpecificAnime(page, animeUrl);
     const alterNameLocators = page.locator(specificAnime.getAlterNames);
-    const alter_names: string[] = [];
     const count = await alterNameLocators.count();
     for (let i = 0; i < count; i++) {
         const name = await alterNameLocators.nth(i).innerText();
@@ -67,9 +87,6 @@ test('scrap anime without alter_names from backend, update backend with alter_na
         id: anime.id,
         alter_names
     };
-
-    const fs = await import('fs/promises');
-    const path = `results/anime-alter-names.json`;
     await fs.writeFile(path, JSON.stringify(payload, null, 2), 'utf-8');
 
     if (!webhook || !secret) {

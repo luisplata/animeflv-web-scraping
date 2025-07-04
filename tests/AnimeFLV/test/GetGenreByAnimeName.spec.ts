@@ -23,6 +23,9 @@ interface AnimeFromBackend {
 }
 
 test('scrap anime without genres from backend, update backend with genres', async ({ page }) => {
+    const genres: string[] = [];
+    const fs = await import('fs/promises');
+    const path = `results/anime-genres.json`;
     const response = await fetch(`${webhook}/animes/without-genres`);
     if (!response.ok) {
         console.error(`No se pudo obtener el anime: ${response.status}`);
@@ -36,6 +39,24 @@ test('scrap anime without genres from backend, update backend with genres', asyn
     const firstResultLink = page.locator("//ul[contains(@class,'ListAnimes')]/li[1]//a");
     if (await firstResultLink.count() === 0) {
         console.error(`No se encontró resultado para "${anime.title}"`);
+        genres.push("AnimeBell");
+
+        const payload = {
+            id: anime.id,
+            genres: genres
+        };
+
+        await fs.writeFile(path, JSON.stringify(payload, null, 2), 'utf-8');
+
+        if (!webhook || !secret) {
+            console.error("SERVER_API o SERVER_SECRET no están definidos en el entorno.");
+            return;
+        }
+        await SendJsonToWebHook(
+            webhook + "/webhook/update-anime-genres",
+            path,
+            headers
+        );
         return;
     }
     const animeHref = await firstResultLink.first().getAttribute("href");
@@ -49,7 +70,6 @@ test('scrap anime without genres from backend, update backend with genres', asyn
 
     const specificAnime = new SpecificAnime(page, animeUrl);
     const genreLocators = page.locator(specificAnime.getGenere);
-    const genres: string[] = [];
     const count = await genreLocators.count();
     for (let i = 0; i < count; i++) {
         const genre = await genreLocators.nth(i).innerText();
@@ -68,8 +88,6 @@ test('scrap anime without genres from backend, update backend with genres', asyn
         genres: genres
     };
 
-    const fs = await import('fs/promises');
-    const path = `results/anime-genres.json`;
     await fs.writeFile(path, JSON.stringify(payload, null, 2), 'utf-8');
 
     if (!webhook || !secret) {
