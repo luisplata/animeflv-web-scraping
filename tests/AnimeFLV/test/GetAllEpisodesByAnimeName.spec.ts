@@ -110,6 +110,7 @@ test('scrapping animeflv', async ({ page }) => {
                     }
 
                     let specificAnimeTask = new GetAllCapsByAnime(specificAnime);
+                    await page.waitForTimeout(1000);
                     let animeName = await specificAnimeTask.getTitleOfAnime();
                     let caps = await specificAnimeTask.getListOfCaps();
 
@@ -172,6 +173,7 @@ test('scrapping animeflv', async ({ page }) => {
                             console.warn(`Se alcanzó el máximo de ciclos (${MAX_CYCLES}) en esta ejecución.`);
                             break;
                         }
+                        break;
                     } catch (e) {
                         console.log("No more pages", e);
                         break;
