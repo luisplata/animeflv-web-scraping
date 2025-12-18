@@ -25,7 +25,7 @@ export const getAllAnimeByDayTask = (user: User) => {
 
                 // Validación: ¿Ya existe el anime y el cap en el backend?
                 let url = `${webhook}/animes/search_specific?q=${slug}`;
-                //console.log(`Consultando el backend para el anime: ${url}`);
+                console.log(`Consultando el backend para el anime: ${url}`);
                 const response = await fetch(url);
                 if (!response.ok) {
                     console.error(`Error al consultar el anime ${slug} en el backend:`, response.statusText);
@@ -43,7 +43,7 @@ export const getAllAnimeByDayTask = (user: User) => {
                     // El anime existe, revisamos los caps
                     const backendSlug = animeData.data[0].slug;
                     let allAnime = `${webhook}/anime/${backendSlug}`;
-                    //console.log(`Consultando el backend para los caps del anime: ${allAnime}`);
+                    console.log(`Consultando el backend para los caps del anime: ${allAnime}`);
                     const capResponse = await fetch(allAnime);
                     if (!capResponse.ok) {
                         console.error(`Error al consultar el cap ${capNum} del anime ${backendSlug} en el backend:`, capResponse.statusText);
@@ -56,6 +56,11 @@ export const getAllAnimeByDayTask = (user: User) => {
                         console.log(`El cap ${capNum} del anime ${backendSlug} ya existe en el backend.`);
                         continue;
                     }
+                    console.log(`El cap ${capNum} del anime ${backendSlug} va a ser procesado.`);
+                    let anime = new Anime(capData.title.split(" "), capData.slug, capData.description, capData.image);
+                    let cap = new Episode(title, capNum, link);
+                    anime.AddCap(cap);
+                    animates.push(anime);
                 }
             } catch (error) {
                 console.warn("Error processing animeOfDay:", error);
